@@ -31,6 +31,7 @@
 - Axios (HTTP Client)
 - ApexCharts (Gráficos)
 - FullCalendar (Calendario)
+- jsPDF & jspdf-autotable (Generación de PDFs)
 
 ### Arquitectura MVC
 
@@ -122,6 +123,7 @@ src/
 | POST | `/:id/complete` | Completar reservación → venta | Auth |
 | POST | `/:id/products` | Añadir producto a reservación | Auth |
 | DELETE | `/:id/products/:reservationProductId` | Eliminar producto de reservación | Auth |
+| POST | `/:id/cancel` | Cancelar una reservación | Auth |
 
 #### 💰 Ventas (`/api/sales`)
 | Método | Endpoint | Descripción | Middleware |
@@ -183,11 +185,13 @@ src/
 
 ```
 src/
-├── components/      # Componentes reutilizables (ej. Modal.vue, TablaBarberia.vue, PaginationControls.vue)
+├── components/      # Componentes reutilizables
 ├── views/          # Vistas/Pantallas principales
 ├── stores/         # Stores de Pinia (estado global)
 ├── router/         # Configuración de rutas
-├── services/       # Servicios HTTP (Axios)
+├── services/       # Lógica de cliente (API, generadores, etc.)
+│   ├── api.js      # Instancia centralizada de Axios
+│   └── barberPaymentSlipGenerator.js # Lógica para generar PDFs de pagos
 └── main.js         # Entrada de la aplicación
 ```
 
@@ -331,17 +335,19 @@ src/
 - `PUT /api/reservations/:id` - Actualizar
 - `DELETE /api/reservations/:id` - Eliminar
 - `POST /api/reservations/:id/complete` - Completar → venta
+- `POST /api/reservations/:id/cancel` - Cancelar
 
 **Funcionalidades:**
 - ✅ Formulario de nueva reservación (cliente, barbero, estación, horario)
 - ✅ Lista de reservaciones con filtros y paginación.
-- ✅ Estados: pendiente, en proceso, completada, cancelada
-- ✅ Completar reservación genera venta automática
+- ✅ **Estados:** `reservado`, `pagado`, `cancelado`.
+- ✅ Completar reservación genera venta automática y cambia el estado a `pagado`.
+- ✅ Cancelar una reservación cambia el estado a `cancelado`.
 
 **Lógica de Negocio:**
-- Las reservaciones bloquean tiempo en el calendario
-- Al completarse, se crea una venta automáticamente
-- Se pueden agregar productos durante el servicio
+- Las reservaciones bloquean tiempo en el calendario.
+- Al completarse, se crea una venta automáticamente.
+- Se pueden agregar productos durante el servicio.
 
 ### 8. 🗓️ **Calendario** (`/schedule`)
 **Endpoint:** `GET /api/reservations/view/calendar`
@@ -351,7 +357,7 @@ src/
 - ✅ Navegación por semanas
 - ✅ Filtro por barbero o vista general
 - ✅ Añadir cita desde el calendario
-- ✅ Visualización de reservaciones por colores
+- ✅ Visualización de reservaciones por colores según su estado.
 
 **Lógica de Negocio:**
 - Integración con FullCalendar
@@ -385,7 +391,7 @@ src/
 - ✅ Cálculo automático de comisiones dinámicas.
 - ✅ Registro de adelantos.
 - ✅ Finalización de pagos.
-- ✅ Generación de comprobantes de pago en PDF.
+- ✅ **Generación de Comprobantes en PDF:** Utiliza el servicio `barberPaymentSlipGenerator.js` junto con las librerías `jsPDF` y `jspdf-autotable` para crear un PDF con el resumen de pago del barbero.
 
 **Lógica de Negocio:**
 - Comisión dinámica basada en el rendimiento del barbero.
@@ -429,9 +435,9 @@ Múltiples vistas de reportes mejoradas:
 ### 📅 **Módulo de Reservaciones**
 1. **Creación**: Cliente + Barbero + Estación + Horario
 2. **Paginación**: La lista de reservaciones está paginada.
-3. **Estados**: Pendiente → En Proceso → Completada/Cancelada
+3. **Estados**: `reservado`, `pagado`, `cancelado`.
 4. **Productos**: Se pueden agregar durante el servicio
-5. **Conversión**: Reservación completada → Venta automática
+5. **Conversión a Venta**: Reservación completada → Venta automática y estado `pagado`.
 
 ### 💰 **Módulo de Ventas**
 1. **Origen**: Desde reservaciones o ventas directas.
@@ -469,10 +475,12 @@ graph LR
 
 ### 🔄 **Flujo de Estados de Reservación**
 
-```
-PENDIENTE → EN PROCESO → COMPLETADA
-    ↓              ↓
-CANCELADA      CANCELADA
+```mermaid
+graph TD
+    A(reservado) --> B{Completar Servicio};
+    A --> C{Cancelar Cita};
+    B --> D[pagado];
+    C --> E[cancelado];
 ```
 
 ### 💸 **Flujo de Cálculo de Comisiones Dinámicas**
