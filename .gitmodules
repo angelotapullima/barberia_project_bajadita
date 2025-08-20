@@ -1,0 +1,6 @@
+[submodule "barberia_project_backend"]
+	path = barberia_project_backend
+	url = https://github.com/angelotapullima/barberia_project_backend
+[submodule "barberia_project_frontend"]
+	path = barberia_project_frontend
+	url = https://github.com/angelotapullima/barberia_project_frontend
