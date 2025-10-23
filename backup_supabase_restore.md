@@ -108,7 +108,8 @@ Si tu servidor PostgreSQL está corriendo dentro de un contenedor Docker, sigue 
     Ejemplo: `docker start postgresql-bajadita-prod`
 
 5.  **Verificar que el contenedor esté corriendo:**
-    ```bash
+
+ ```bash
     docker ps --format "table {{.ID}}\t{{.Image}}\t{{.Names}}"
     ```
 

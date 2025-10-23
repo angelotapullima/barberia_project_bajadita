@@ -76,151 +76,104 @@ src/
 
 El backend utiliza `pg` (Node-Postgres) con un pool de conexiones para gestionar eficientemente las interacciones con PostgreSQL.
 
--   **`database.ts`**: Configura y exporta una instancia de `Pool` (`dbPool`). Incluye `connectionTimeoutMillis` e `idleTimeoutMillis` para gestionar el ciclo de vida de las conexiones.
--   **`app.ts`**: Inicializa el pool de conexiones y realiza una conexión de prueba (`pool.connect()`) para asegurar que la base de datos esté accesible antes de configurar las rutas. **Importante:** Se ha corregido la liberación prematura del cliente (`client.release()`) en esta etapa para evitar problemas de conexión.
--   **`server.ts`**: Implementa manejadores para las señales de terminación del proceso (`SIGINT`, `SIGTERM`). Estos manejadores aseguran que el `dbPool` se cierre de forma elegante (`dbPool.end()`) cuando el servidor se detiene, liberando todas las conexiones y evitando errores de `db_termination` en reinicios.
+-   **`database.ts`**: Configura y exporta una instancia de `Pool` (`dbPool`).
+-   **`server.ts`**: Implementa manejadores para las señales de terminación del proceso (`SIGINT`, `SIGTERM`) que aseguran que el `dbPool` se cierre de forma elegante.
 
 ### 🔗 ENDPOINTS DISPONIBLES
 
 La API RESTful proporciona los siguientes endpoints, protegidos por autenticación JWT y, en algunos casos, por autorización basada en roles.
 
-#### 🔐 Autenticación y Gestión de Usuarios (`/api/auth`)
-| Método | Endpoint | Descripción | Middleware |
-|--------|----------|-------------|------------|
-| POST | `/login` | Inicia sesión de un usuario, retorna JWT y datos del usuario. | - |
-| GET | `/me` | Obtiene el perfil del usuario autenticado. | `authenticateToken` |
-| PUT | `/change-password` | Cambia la contraseña del usuario autenticado. | `authenticateToken` |
-| GET | `/users` | Lista todos los usuarios (solo Admin). | `authenticateToken`, `authorizeRoles('administrador')` |
-| POST | `/users` | Crea un nuevo usuario (solo Admin). | `authenticateToken`, `authorizeRoles('administrador')` |
-| PUT | `/users/:id` | Actualiza un usuario existente (solo Admin). | `authenticateToken`, `authorizeRoles('administrador')` |
-| DELETE | `/users/:id` | Elimina un usuario (solo Admin). | `authenticateToken`, `authorizeRoles('administrador')` |
+#### 🔐 Autenticación, Personas y Usuarios
+| Método | Endpoint | Descripción | Middleware / Rol |
+|--------|----------|-------------|------------------|
+| POST | `/api/auth/login` | Inicia sesión de un usuario, retorna JWT. | - |
+| GET | `/api/auth/me` | Obtiene el perfil del usuario autenticado. | `authenticateToken` |
+| PUT | `/api/auth/change-password` | Cambia la contraseña del usuario autenticado. | `authenticateToken` |
+| GET | `/api/persons` | Lista todas las personas. | `authenticateToken` |
+| POST | `/api/persons` | Crea una nueva persona. | `authenticateToken` |
+| PUT | `/api/persons/:id` | Actualiza una persona. | `authenticateToken` |
+| GET | `/api/users` | Lista todos los usuarios. | `authenticateToken`, `authorizeRoles('administrador')` |
+| POST | `/api/users` | Crea un nuevo usuario. | `authenticateToken`, `authorizeRoles('administrador')` |
+| PUT | `/api/users/:id` | Actualiza un usuario. | `authenticateToken`, `authorizeRoles('administrador')` |
 
-#### 📊 Dashboard (`/api/dashboard`)
+#### 💈 Gestión de Barbería
 | Método | Endpoint | Descripción | Middleware |
 |--------|----------|-------------|------------|
-| GET | `/summary` | Retorna un resumen de métricas clave para el dashboard (ventas, reservas, etc.). | `authenticateToken` |
+| GET, POST, PUT, DELETE | `/api/barbers` | CRUD completo para barberos. | `authenticateToken` |
+| POST | `/api/barbers/:id/advances` | Registra un adelanto para un barbero. | `authenticateToken` |
+| GET, POST, PUT, DELETE | `/api/stations` | CRUD completo para estaciones de trabajo. | `authenticateToken` |
+| GET, POST, PUT, DELETE | `/api/services` | CRUD completo para servicios. | `authenticateToken` |
 
-#### 👨‍💼 Barberos (`/api/barbers`)
+#### 📦 Inventario y Productos
 | Método | Endpoint | Descripción | Middleware |
 |--------|----------|-------------|------------|
-| GET | `/` | Lista todos los barberos activos. | `authenticateToken` |
-| GET | `/:id` | Obtiene un barbero por su ID. | `authenticateToken` |
-| POST | `/` | Crea un nuevo barbero. | `authenticateToken` |
-| PUT | `/:id` | Actualiza un barbero existente. | `authenticateToken` |
-| DELETE | `/:id` | Desactiva (soft delete) un barbero. | `authenticateToken` |
-| POST | `/:id/advances` | Registra un adelanto de pago para un barbero. | `authenticateToken` |
+| GET, POST, PUT, DELETE | `/api/inventory-items` | CRUD para ítems de inventario (materias primas). | `authenticateToken` |
+| GET, POST, PUT, DELETE | `/api/menu-products` | CRUD para productos de menú (productos de venta). | `authenticateToken` |
+| GET | `/api/inventory/summary` | Resumen del inventario (legado). | `authenticateToken` |
+| GET, POST | `/api/inventory/movements` | Gestión de movimientos de inventario (legado). | `authenticateToken` |
 
-#### 🪑 Estaciones (`/api/stations`)
+#### 🚚 Compras y Proveedores
 | Método | Endpoint | Descripción | Middleware |
 |--------|----------|-------------|------------|
-| GET | `/` | Lista todas las estaciones activas. | `authenticateToken` |
-| POST | `/` | Crea una nueva estación (máximo 10 estaciones). | `authenticateToken` |
-| PUT | `/:id` | Actualiza una estación existente. | `authenticateToken` |
-| DELETE | `/:id` | Desactiva (soft delete) una estación, con validación si tiene barberos asignados. | `authenticateToken` |
+| GET, POST, PUT, DELETE | `/api/suppliers` | CRUD completo para proveedores. | `authenticateToken` |
+| GET, POST, PUT, DELETE | `/api/purchases` | CRUD completo para compras. | `authenticateToken` |
 
-#### ✂️ Servicios (`/api/services`)
+#### 📅 Reservas y Ventas
 | Método | Endpoint | Descripción | Middleware |
 |--------|----------|-------------|------------|
-| GET | `/` | Lista todos los servicios activos con paginación. | `authenticateToken` |
-| GET | `/:id` | Obtiene un servicio por su ID. | `authenticateToken` |
-| POST | `/` | Crea un nuevo servicio (manejo de error 409 por nombre único). | `authenticateToken` |
-| PUT | `/:id` | Actualiza un servicio existente (manejo de error 409 por nombre único). | `authenticateToken` |
-| DELETE | `/:id` | Desactiva (soft delete) un servicio. | `authenticateToken` |
+| GET, POST, PUT, DELETE | `/api/reservations` | CRUD completo para reservaciones. | `authenticateToken` |
+| POST | `/api/reservations/:id/complete` | Completa una reserva y genera una venta. | `authenticateToken` |
+| POST | `/api/reservations/:id/cancel` | Cancela una reserva. | `authenticateToken` |
+| GET | `/api/reservations/view/calendar` | Obtiene datos para la vista de calendario. | `authenticateToken` |
+| GET, POST | `/api/sales` | Listar y crear ventas directas. | `authenticateToken` |
+| GET | `/api/sales/:id` | Obtiene una venta por su ID. | `authenticateToken` |
 
-#### 🛍️ Productos (`/api/products`)
+#### 💵 Comisiones y Pagos
 | Método | Endpoint | Descripción | Middleware |
 |--------|----------|-------------|------------|
-| GET | `/` | Lista todos los productos activos. | `authenticateToken` |
-| GET | `/:id` | Obtiene un producto por su ID. | `authenticateToken` |
-| POST | `/` | Crea un nuevo producto. | `authenticateToken` |
-| PUT | `/:id` | Actualiza un producto existente. | `authenticateToken` |
-| DELETE | `/:id` | Desactiva (soft delete) un producto. | `authenticateToken` |
+| GET | `/api/barber-commissions/monthly-summary` | Resumen mensual de comisiones. | `authenticateToken` |
+| POST | `/api/barber-commissions/finalize-payment` | Finaliza un pago de comisiones. | `authenticateToken` |
+| GET | `/api/barber-commissions/:barberId/services` | Lista servicios detallados de un barbero. | `authenticateToken` |
+| GET | `/api/barber-commissions/:barberId/advances` | Lista adelantos detallados de un barbero. | `authenticateToken` |
+| GET, PUT | `/api/payments` | Gestiona registros de pagos de comisiones. | `authenticateToken` |
 
-#### 📅 Reservaciones (`/api/reservations`)
+#### 📈 Reportes y Dashboard
 | Método | Endpoint | Descripción | Middleware |
 |--------|----------|-------------|------------|
-| GET | `/` | Lista todas las reservaciones con paginación y opción de incluir detalles de venta. | `authenticateToken` |
-| GET | `/:id` | Obtiene una reservación por su ID con opción de incluir productos asociados. | `authenticateToken` |
-| POST | `/` | Crea una nueva reservación. | `authenticateToken` |
-| PUT | `/:id` | Actualiza una reservación existente. | `authenticateToken` |
-| DELETE | `/:id` | Elimina una reservación y sus productos asociados. | `authenticateToken` |
-| POST | `/:id/complete` | Completa una reservación y genera una venta. | `authenticateToken` |
-| POST | `/:id/cancel` | Cancela una reservación. | `authenticateToken` |
-| POST | `/:id/products` | Añade un producto a una reservación. | `authenticateToken` |
-| DELETE | `/:id/products/:reservationProductId` | Elimina un producto de una reservación. | `authenticateToken` |
-| GET | `/view/calendar` | Retorna datos de reservaciones, barberos y servicios para la vista de calendario, filtrable por fecha y estado. | `authenticateToken` |
-| POST | `/fix-end-times` | Utilidad para corregir tiempos de finalización de reservas. | `authenticateToken` |
+| GET | `/api/dashboard/summary` | Resumen de métricas clave para el dashboard. | `authenticateToken` |
+| GET | `/api/reports/comprehensive-sales` | Reporte comprensivo de ventas. | `authenticateToken` |
+| GET | `/api/reports/services-products-sales` | Reporte de ventas por servicios y productos. | `authenticateToken` |
+| GET | `/api/reports/station-usage` | Reporte de uso de estaciones. | `authenticateToken` |
+| GET | `/api/reports/customer-frequency` | Reporte de frecuencia de clientes. | `authenticateToken` |
+| GET | `/api/reports/peak-hours` | Reporte de horas pico de actividad. | `authenticateToken` |
 
-#### 💰 Ventas (`/api/sales`)
-| Método | Endpoint | Descripción | Middleware |
-|--------|----------|-------------|------------|
-| POST | `/` | Crea una nueva venta directa (sin reservación). | `authenticateToken` |
-| GET | `/` | Lista todas las ventas con paginación y filtros por fecha y método de pago. | `authenticateToken` |
-| GET | `/:id` | Obtiene una venta por su ID, incluyendo sus ítems. | `authenticateToken` |
-| GET | `/by-reservation/:reservationId` | Obtiene una venta asociada a una reservación. | `authenticateToken` |
-
-#### 💳 Pagos (`/api/payments`)
-| Método | Endpoint | Descripción | Middleware |
-|--------|----------|-------------|------------|
-| GET | `/` | Listar pagos (comisiones finalizadas). | `authenticateToken` |
-| PUT | `/:id` | Actualizar pago (ej. estado). | `authenticateToken` |
-
-#### 🏪 Punto de Venta (`/api/pos`)
-| Método | Endpoint | Descripción | Middleware |
-|--------|----------|-------------|------------|
-| GET | `/master-data` | Datos maestros del POS (servicios, productos, barberos). | `authenticateToken` |
-
-#### 📈 Reportes (`/api/reports`)
-| Método | Endpoint | Descripción | Middleware |
-|--------|----------|-------------|------------|
-| GET | `/comprehensive-sales` | Reporte comprensivo de ventas, filtrable por rango de fechas y método de pago. | `authenticateToken` |
-| GET | `/services-products-sales` | Reporte de ventas por servicios y productos, filtrable por rango de fechas. | `authenticateToken` |
-| GET | `/station-usage` | Reporte de uso de estaciones, filtrable por rango de fechas. | `authenticateToken` |
-| GET | `/customer-frequency` | Reporte de frecuencia de clientes, filtrable por rango de fechas. | `authenticateToken` |
-| GET | `/peak-hours` | Reporte de horas pico de actividad (reservas), filtrable por rango de fechas. | `authenticateToken` |
-| GET | `/detailed-barber-service-sales` | Reporte detallado de ventas de servicios por barbero, filtrable por rango de fechas y barbero. | `authenticateToken` |
-
-#### 💵 Comisiones de Barberos (`/api/barber-commissions`)
-| Método | Endpoint | Descripción | Middleware |
-|--------|----------|-------------|------------|
-| GET | `/monthly-summary` | Resumen mensual de comisiones calculadas en vivo para todos los barberos. | `authenticateToken` |
-| POST | `/finalize-payment` | Registra y finaliza un pago de comisiones para un barbero en un período específico. | `authenticateToken` |
-| GET | `/:barberId/services` | Lista los servicios detallados realizados por un barbero en un mes específico. | `authenticateToken` |
-| GET | `/:barberId/advances` | Lista los adelantos detallados de un barbero en un mes específico. | `authenticateToken` |
-
-#### 📦 Inventario (`/api/inventory`)
-| Método | Endpoint | Descripción | Middleware |
-|--------|----------|-------------|------------|
-| GET | `/summary` | Resumen del inventario actual (total productos, bajo stock, valor total). | `authenticateToken` |
-| GET | `/movements` | Lista todos los movimientos de inventario, opcionalmente filtrados por producto. | `authenticateToken` |
-| POST | `/movements` | Registra un nuevo movimiento de inventario (entrada/salida). | `authenticateToken` |
-
-#### ⚙️ Configuración (`/api/settings`)
-| Método | Endpoint | Descripción | Middleware |
-|--------|----------|-------------|------------|
-| GET | `/` | Obtiene todas las configuraciones del sistema. | `authenticateToken`, `authorizeRoles('administrador')` |
-| PUT | `/` | Actualiza una o varias configuraciones del sistema. | `authenticateToken`, `authorizeRoles('administrador')` |
-| GET | `/:key` | Obtiene una configuración específica por su clave. | `authenticateToken`, `authorizeRoles('administrador')` |
+#### ⚙️ Configuración
+| Método | Endpoint | Descripción | Middleware / Rol |
+|--------|----------|-------------|------------------|
+| GET, PUT | `/api/settings` | Gestiona la configuración del sistema. | `authenticateToken`, `authorizeRoles('administrador')` |
 
 ### Modelos de Datos (Interfaces TypeScript)
 
--   **`Barber`**: `id`, `name`, `email`, `phone`, `hire_date`, `base_salary`, `commission_rate`, `station_id`, `is_active`, `created_at`, `updated_at`.
--   **`Product`**: `id`, `name`, `description`, `price`, `stock_quantity`, `min_stock_level`, `category`, `is_active`, `created_at`, `updated_at`.
--   **`Reservation`**: `id`, `barber_id`, `station_id`, `service_id`, `client_name`, `client_phone`, `start_time`, `end_time`, `status`, `service_price`, `notes`, `created_at`, `updated_at`. Incluye campos opcionales para joins (`barber_name`, `station_name`, `service_name`, `products`).
--   **`ReservationProduct`**: `id`, `reservation_id`, `product_id`, `quantity`, `price_at_reservation`, `created_at`.
--   **`Sale`**: `id`, `reservation_id`, `barber_id`, `customer_name`, `service_amount`, `products_amount`, `total_amount`, `payment_method`, `sale_date`, `created_at`, `updated_at`. Incluye `items` opcional para detalles de ítems de venta.
--   **`SaleItem`**: `id`, `sale_id`, `item_type`, `item_id`, `item_name`, `quantity`, `unit_price`, `total_price`, `created_at`.
--   **`Service`**: `id`, `name`, `description`, `price`, `duration_minutes`, `is_active`, `created_at`, `updated_at`.
--   **`Station`**: `id`, `name`, `description`, `is_active`, `created_at`, `updated_at`.
--   **`User`**: `id`, `name`, `email`, `password` (hash), `role`.
+-   **`Person`**: `id`, `dni`, `first_name`, `last_name`, `email`, `phone`, `address`, `birth_date`. Representa una entidad humana o legal.
+-   **`User`**: `id`, `person_id`, `password` (hash), `role` (`administrador`, `cajero`). Usuario del sistema con credenciales.
+-   **`Barber`**: `id`, `name`, `email`, `phone`, `hire_date`, `base_salary`, `commission_rate`, `station_id`, `is_active`. Empleado que realiza servicios.
+-   **`Station`**: `id`, `name`, `description`, `is_active`. Puesto de trabajo físico.
+-   **`Service`**: `id`, `name`, `description`, `price`, `duration_minutes`, `is_active`. Servicios ofrecidos por la barbería.
+-   **`InventoryItem`**: `id`, `name`, `description`, `stock_quantity`, `min_stock_level`, `unit`. Materia prima o insumo.
+-   **`MenuProduct`**: `id`, `name`, `price`, `category`, `is_active`, `inventory_item_id` (si es venta directa), `recipes` (si es compuesto). Producto final que se vende al cliente.
+-   **`ProductRecipe`**: `menu_product_id`, `inventory_item_id`, `quantity_used`. Define los insumos para un `MenuProduct` compuesto.
+-   **`Supplier`**: `id`, `name`, `ruc`, `phone`, `email`, `address`, `person_id`. Proveedor de insumos.
+-   **`Purchase`**: `id`, `supplier_id`, `purchase_date`, `total_amount`, `status`. Transacción de compra a un proveedor.
+-   **`PurchaseDetail`**: `purchase_id`, `item_description`, `quantity`, `unit_price`. Ítems dentro de una compra.
+-   **`Reservation`**: `id`, `barber_id`, `station_id`, `service_id`, `client_name`, `start_time`, `end_time`, `status`. Cita agendada.
+-   **`Sale`**: `id`, `reservation_id`, `barber_id`, `total_amount`, `payment_method`, `sale_date`. Transacción de venta finalizada.
+-   **`SaleItem`**: `sale_id`, `item_type` (`service`, `product`), `item_id`, `quantity`, `unit_price`. Ítems dentro de una venta.
 
 ---
 
 ## 🎨 FRONTEND - APLICACIÓN VUE.JS (ubicado en la carpeta `barberia_project_frontend`)
 
 ### Estructura de Directorios
-
-La estructura del frontend está organizada para Vue.js 3 con Composition API y Pinia:
 
 ```
 src/
@@ -237,454 +190,210 @@ src/
 
 ### 🛣️ RUTAS PRINCIPALES
 
-La aplicación utiliza Vue Router para gestionar la navegación entre las diferentes vistas. Todas las rutas, excepto `/login`, requieren autenticación.
-
 | Ruta | Vista | Nombre de Ruta | Descripción |
 |------|-------|----------------|-------------|
 | `/` | `DashboardView` | `Dashboard` | Panel principal con métricas y gráficos resumen. |
 | `/login` | `LoginView` | `Login` | Página de inicio de sesión. |
+| `/people` | `PeopleView` | `People` | Gestión de personas (clientes, personal). |
 | `/barbers` | `BarbersView` | `Barbers` | Gestión de barberos (CRUD). |
 | `/stations` | `StationsView` | `Stations` | Gestión de estaciones de trabajo (CRUD). |
 | `/services` | `ServicesView` | `Services` | Gestión de servicios ofrecidos (CRUD con paginación). |
-| `/products` | `ProductsView` | `Products` | Gestión de productos (CRUD). |
+| `/inventory` | `InventoryView` | `Inventory` | Gestión de inventario y productos de menú. |
+| `/suppliers` | `SuppliersView` | `Suppliers` | Gestión de proveedores. |
+| `/purchases` | `PurchasesView` | `Purchases` | Gestión de compras a proveedores. |
 | `/reservations` | `ReservationsView` | `Reservations` | Gestión de reservaciones (CRUD, paginación). |
 | `/schedule` | `CalendarView` | `Schedule` | Vista de calendario semanal de citas. |
 | `/sales` | `SalesView` | `SalesRegistration` | Registro y listado de ventas. |
 | `/payments` | `BarberPaymentsReportView` | `Payments` | Resumen de pagos a barberos. |
-| `/profile` | `ProfileView` | `Profile` | Perfil de usuario y cambio de contraseña. |
 | `/settings` | `SettingsView` | `Settings` | Configuración del sistema y gestión de usuarios (solo Admin). |
-| `/reports` | `ReportsView` | `Reports` | Página de inicio para la sección de reportes. |
-| `/reports/inventory` | `InventoryReportView` | `InventoryReport` | Reporte de inventario (resumen y movimientos). |
-| `/reports/station-usage` | `StationUsageReportView` | `StationUsageReport` | Reporte de uso de estaciones. |
-| `/reports/customer-frequency` | `CustomerFrequencyReportView` | `CustomerFrequencyReport` | Reporte de frecuencia de clientes. |
-| `/reports/peak-hours` | `PeakHoursReportView` | `PeakHoursReport` | Reporte de horas pico de reservas. |
-| `/reports/sales/comprehensive` | `ComprehensiveSalesReportView` | `ComprehensiveSalesReport` | Reporte detallado de ventas. |
-| `/reports/sales/by-type` | `ServicesProductsSalesReportView` | `ServicesProductsSalesReport` | Reporte de ventas por tipo (servicios/productos). |
-| `/reports/barber-payments-detailed` | `BarberPaymentsReportView` | `BarberPaymentsReport` | Reporte detallado de pagos a barberos. |
-| `/payment/confirm` | `PaymentConfirmationView` | `PaymentConfirm` | Confirmación y finalización de pago a barbero. |
+| `/reports/*` | Vistas de Reportes | Diversos reportes de negocio. |
 
 ### 🗃️ STORES DE PINIA
 
-Pinia se utiliza para la gestión centralizada del estado de la aplicación, proporcionando stores modulares y reactivos.
+-   **`authStore`**: Gestiona el estado de autenticación del usuario (token JWT, datos del usuario, roles).
+-   **`personStore`**: Gestiona el estado y las operaciones CRUD para las personas.
+-   **`userStore`**: Gestiona la lista de usuarios (solo para administradores).
+-   **`barberStore`**: Gestiona la lista de barberos.
+-   **`stationStore`**: Gestiona la lista de estaciones.
+-   **`serviceStore`**: Gestiona la lista de servicios con paginación.
+-   **`inventoryItemStore`**: Gestiona el estado y las operaciones CRUD para los ítems de inventario (materias primas).
+-   **`menuProductStore`**: Gestiona el estado y las operaciones CRUD para los productos de menú.
+-   **`supplierStore`**: Gestiona el estado de los proveedores.
+-   **`purchaseStore`**: Gestiona el estado de las compras.
+-   **`reservationStore`**: Gestiona la lista de reservaciones y sus operaciones.
+-   **`salesStore`**: Gestiona la lista de ventas.
+-   **`reportStore`**: Almacena los datos de los diversos reportes.
+-   **`paymentStore`**: Almacena temporalmente la información de un pago de comisión seleccionado.
 
--   **`authStore`**: Gestiona el estado de autenticación del usuario (token JWT, datos del usuario, roles). Incluye acciones para `login`, `logout` e `initializeStore` (para cargar datos de `localStorage`).
--   **`barberStore`**: Gestiona la lista de barberos, incluyendo acciones CRUD (`getAllBarbers`, `addBarber`, `updateBarber`, `deleteBarber`).
--   **`paymentStore`**: Almacena temporalmente la información de un pago de comisión seleccionado para la vista de confirmación (`selectedPaymentItem`, `detailedServices`, `detailedAdvances`).
--   **`productStore`**: Gestiona la lista de productos, incluyendo acciones CRUD (`fetchProducts`, `addProduct`, `updateProduct`, `deleteProduct`).
--   **`reportStore`**: Almacena los datos de los diversos reportes (`comprehensiveSales`, `servicesProductsSales`, `stationUsage`, `customerFrequency`, `peakHours`, etc.) y acciones para obtenerlos de la API.
--   **`reservationStore`**: Gestiona la lista de reservaciones, incluyendo acciones CRUD (`fetchReservations`, `addReservation`, `updateReservation`, `deleteReservation`), así como acciones específicas como `addProductToReservation`, `removeProductFromReservation`, `completeReservationAndCreateSale` y `cancelReservation`.
--   **`salesStore`**: Gestiona la lista de ventas, incluyendo acciones para `getAllSales`, `fetchSaleById`, `createDirectSale` y `fetchSaleByReservationId`.
--   **`serviceStore`**: Gestiona la lista de servicios, incluyendo acciones CRUD (`fetchServices`, `addService`, `updateService`, `deleteService`) y manejo de paginación (`setPage`, `setItemsPerPage`).
--   **`settingStore`**: Gestiona las configuraciones del sistema (`fetchAllSettings`, `updateSetting`).
--   **`stationStore`**: Gestiona la lista de estaciones, incluyendo acciones CRUD (`fetchStations`, `addStation`, `updateStation`, `deleteStation`).
--   **`userStore`**: Gestiona la lista de usuarios (solo para administradores), incluyendo acciones CRUD (`fetchUsers`, `createUser`, `updateUser`, `deleteUser`).
+### Componentes Reutilizables Clave
 
-### Componentes Reutilizables
-
--   **`BarberAdvanceModal.vue`**: Modal para registrar adelantos de pago a barberos.
--   **`Breadcrumbs.vue`**: Componente de navegación tipo "migas de pan".
--   **`CustomSelect.vue`**: Componente de selector (`<select>`) estilizado.
--   **`Modal.vue`**: Componente base para modales, con manejo de cierre por `Escape` y click fuera.
--   **`PaginationControls.vue`**: Controles de paginación para tablas.
--   **`ReservationCancelModal.vue`**: Modal de confirmación para cancelar una reserva.
--   **`ReservationFormModal.vue`**: Modal para crear o editar una reserva. **Importante:** Se ha ajustado para que las horas de inicio y fin se construyan y envíen al backend en formato UTC (`dayjs.utc()`) para evitar problemas de zona horaria.
--   **`ReservationRejectModal.vue`**: Modal de confirmación para rechazar una reserva.
--   **`SaleDetailsModal.vue`**: Modal para mostrar los detalles de una venta.
--   **`SaleRegistrationModal.vue`**: Modal para registrar ventas (directas o desde reserva), permitiendo añadir servicios y productos.
+-   **`Modal.vue`**: Componente base para modales.
+-   **`TablaBarberia.vue`**: Tabla genérica y reutilizable para mostrar datos con acciones y paginación.
+-   **`PersonFormModal.vue`**: Formulario para crear/editar personas.
+-   **`SupplierFormModal.vue`**: Formulario para crear/editar proveedores.
+-   **`InventoryItemFormModal.vue`**: Formulario para crear/editar ítems de inventario.
+-   **`MenuProductFormModal.vue`**: Formulario para productos de menú (con lógica para recetas).
+-   **`SaleRegistrationModal.vue`**: Modal para registrar ventas, permite añadir servicios y productos de menú.
+-   **`ReservationFormModal.vue`**: Formulario para crear/editar una reserva.
 -   **`Sidebar.vue`**: Barra lateral de navegación principal de la aplicación.
--   **`TablaBarberia.vue`**: Componente genérico de tabla para mostrar listas de datos con acciones de edición/eliminación y paginación.
-
-### Manejo de Fechas y Horas (UTC)
-
-Para asegurar la consistencia y evitar problemas de zona horaria entre el frontend y el backend, todas las fechas y horas se manejan en UTC.
-
--   En `CalendarView.vue`, las funciones `formatTime` y `getAppointmentStyle` utilizan `dayjs.utc()` para interpretar y mostrar las horas de las reservas directamente en UTC, y para calcular la posición de los eventos en el calendario basándose en la hora UTC.
--   En `ReservationFormModal.vue`, al crear o actualizar una reserva, `start_time` y `end_time` se construyen utilizando `dayjs.utc()` a partir de la fecha y hora seleccionadas por el usuario, y luego se convierten a formato ISO 8601 (UTC) antes de ser enviadas al backend.
 
 ---
 
 ## 📱 FUNCIONALIDADES POR PANTALLA
 
 ### 1. 🏠 **Dashboard** (`/`)
-**Endpoint Principal:** `GET /api/dashboard/summary`
-
-**Funcionalidades:**
--   ✅ Tarjetas de métricas en tiempo real: Ventas de productos (hoy), Ventas de servicios (hoy), Reservas para hoy, Clientes atendidos (hoy), Ingresos del mes.
--   ✅ Gráfico de área: Ventas de productos (últimos 30 días).
--   ✅ Gráfico de área: Ventas de servicios (últimos 30 días).
--   ✅ Tabla de pagos a barberos del mes actual.
--   ✅ Gráfico donut: Servicios populares de la semana.
-
-**Lógica de Negocio:**
--   Se actualiza automáticamente al cargar la página.
--   Los datos se obtienen del endpoint de dashboard que consolida información de múltiples tablas.
+- **Funcionalidades:** Tarjetas de métricas en tiempo real, gráficos de ventas, tabla de pagos a barberos, servicios populares.
+- **Lógica:** Se actualiza al cargar, obteniendo datos consolidados del endpoint `/api/dashboard/summary`.
 
 ### 2. 🔐 **Login** (`/login`)
-**Endpoint:** `POST /api/auth/login`
+- **Funcionalidades:** Formulario de email/password, validación, almacenamiento de token JWT en `localStorage`.
+- **Lógica:** Utiliza JWT para autenticación. Un `router.beforeEach` protege las rutas.
 
-**Funcionalidades:**
--   ✅ Formulario de inicio de sesión (email/password).
--   ✅ Validación de credenciales.
--   ✅ Almacenamiento del token JWT en `localStorage`.
--   ✅ Redirección automática al dashboard tras un login exitoso.
+### 3. 👥 **Personas** (`/people`)
+- **Funcionalidades:** CRUD completo para la entidad `Person`. Esta vista permite gestionar una base de datos central de individuos que pueden ser clientes, o la base para crear usuarios, proveedores, etc.
+- **Lógica:** Interactúa con el `personStore` para realizar las operaciones contra `/api/persons`.
 
-**Lógica de Negocio:**
--   Utiliza JWT para autenticación.
--   El token se guarda en `localStorage` y se adjunta automáticamente a las peticiones HTTP a través de un interceptor de Axios.
--   Un `router.beforeEach` en Vue Router verifica el estado de autenticación antes de permitir el acceso a rutas protegidas.
+### 4. 👨‍💼 **Barberos** (`/barbers`)
+- **Funcionalidades:** Lista de barberos, modal para crear/editar (nombre, contacto, sueldo, comisión, estación), eliminación lógica.
+- **Lógica:** Los barberos inactivos no aparecen en otros módulos.
 
-### 3. 👨‍💼 **Barberos** (`/barbers`)
-**Endpoints:**
--   `GET /api/barbers` - Listar
--   `POST /api/barbers` - Crear
--   `PUT /api/barbers/:id` - Actualizar
--   `DELETE /api/barbers/:id` - Eliminar (soft delete)
--   `POST /api/barbers/:id/advances` - Crear adelanto
+### 5. 🪑 **Estaciones** (`/stations`)
+- **Funcionalidades:** CRUD completo de estaciones de trabajo.
+- **Lógica:** Validación para evitar eliminar estaciones con barberos asignados.
 
-**Funcionalidades:**
--   ✅ Lista completa de barberos con tabla responsive.
--   ✅ Modal para crear/editar barberos con campos: nombre, email, teléfono, fecha de contratación, sueldo base, tasa de comisión, estación asignada, estado activo.
--   ✅ Eliminación lógica (desactivación) con confirmación.
--   ✅ Vista móvil adaptativa.
+### 6. ✂️ **Servicios** (`/services`)
+- **Funcionalidades:** Gestión de servicios con tabla paginada (precio, duración, etc.).
+- **Lógica:** El precio y duración se usan en reservas y ventas.
 
-**Lógica de Negocio:**
--   Cada barbero puede tener una estación asignada.
--   Los barberos inactivos no aparecen en las selecciones de otros módulos.
--   El sueldo base y la tasa de comisión se usan para calcular comisiones.
+### 7. 📦 **Inventario** (`/inventory`)
+- **Funcionalidades:** Interfaz con dos pestañas:
+    - **Pestaña "Productos de Menú"**: Gestión de los productos que se venden al cliente (ej. "Café Americano", "Cera Moldeadora"). Permite definir si es un producto de venta directa, si es un producto compuesto (con receta), o un servicio.
+    - **Pestaña "Ítems de Inventario"**: Gestión de las materias primas y su stock real (ej. "Gramos de Café", "Botella de Shampoo", "Pote de Cera").
+- **Lógica:** Es el núcleo del control de stock. Las ventas de "Productos de Menú" descuentan "Ítems de Inventario".
 
-### 4. 🪑 **Estaciones** (`/stations`)
-**Endpoints:**
--   `GET /api/stations` - Listar
--   `POST /api/stations` - Crear
--   `PUT /api/stations/:id` - Actualizar
--   `DELETE /api/stations/:id` - Eliminar (soft delete)
+### 8. 🚚 **Proveedores** (`/suppliers`)
+- **Funcionalidades:** CRUD para los proveedores de la barbería. Permite registrar información de contacto y fiscal.
+- **Lógica:** Interactúa con el `supplierStore` y los endpoints `/api/suppliers`.
 
-**Funcionalidades:**
--   ✅ CRUD completo de estaciones de trabajo.
--   ✅ Validación para evitar la eliminación si hay barberos activos asignados a la estación.
+### 9. 🛒 **Compras** (`/purchases`)
+- **Funcionalidades:** Registro de las compras a proveedores. Se selecciona un proveedor, se añaden los ítems comprados (que se relacionan con los `Ítems de Inventario`) y se registra el total.
+- **Lógica:** Al registrar una compra, se actualiza automáticamente el stock de los `Ítems de Inventario` correspondientes.
 
-### 5. ✂️ **Servicios** (`/services`)
-**Endpoints:**
--   `GET /api/services` - Listar (con paginación)
--   `POST /api/services` - Crear
--   `PUT /api/services/:id` - Actualizar
--   `DELETE /api/services/:id` - Eliminar (soft delete)
+### 10. 📅 **Reservaciones y Calendario** (`/reservations`, `/schedule`)
+- **Funcionalidades:** Formulario de nueva reserva, lista paginada, estados (`reservado`, `pagado`, `cancelado`). La vista de calendario (`/schedule`) muestra las citas por semana y permite crear reservas desde los huecos libres.
+- **Lógica:** Completar una reserva genera una venta automática. Las horas se manejan en UTC.
 
-**Funcionalidades:**
--   ✅ Gestión de servicios ofrecidos por la barbería.
--   ✅ Tabla con paginación: Muestra los servicios, incluyendo nombre, descripción, precio, duración y estado activo.
--   ✅ Modal de creación/edición: Permite añadir nuevos servicios o editar existentes con campos para nombre, descripción, precio, duración y estado activo.
+### 11. 💰 **Ventas** (`/sales`)
+- **Funcionalidades:** Lista de ventas con filtros. Modal para registrar ventas directas, permitiendo añadir servicios y `Productos de Menú`.
+- **Lógica:** Las ventas actualizan el stock de `Ítems de Inventario` según la lógica de productos directos o compuestos.
 
-**Lógica de Negocio:**
--   El precio y la duración se utilizan en el módulo de reservaciones y ventas.
--   Los servicios inactivos no se muestran en las selecciones.
+### 12. 💵 **Pagos a Barberos** (`/payments`)
+- **Funcionalidades:** Resumen mensual de comisiones por barbero, detalle de servicios y adelantos, y finalización de pagos con generación de boleta en PDF.
+- **Lógica:** El cálculo de comisión se basa en reglas de negocio (sueldo base vs. ventas).
 
-### 6. 🛍️ **Productos** (`/products`)
-**Endpoints:**
--   `GET /api/products` - Listar
--   `POST /api/products` - Crear
--   `PUT /api/products/:id` - Actualizar
--   `DELETE /api/products/:id` - Eliminar (soft delete)
+### 13. ⚙️ **Configuración** (`/settings`)
+- **Funcionalidades:**
+    - **Pestaña "Configuración General"**: Ajuste de parámetros del sistema (solo admin).
+    - **Pestaña "Gestión de Usuarios"**: CRUD para los usuarios del sistema (`cajero`, `administrador`) (solo admin).
+- **Lógica:** Permite la administración de alto nivel del sistema.
 
-**Funcionalidades:**
--   ✅ Inventario de productos para venta.
--   ✅ Campos: nombre, descripción, precio, stock actual, stock mínimo, categoría, estado activo.
--   ✅ Control de stock automático (a través de movimientos de inventario).
-
-**Lógica de Negocio:**
--   El stock se actualiza automáticamente con las ventas.
--   Se pueden generar alertas cuando el stock está por debajo del mínimo.
-
-### 7. 📅 **Reservaciones** (`/reservations`)
-**Endpoints:**
--   `GET /api/reservations` - Listar (con paginación)
--   `POST /api/reservations` - Crear
--   `PUT /api/reservations/:id` - Actualizar
--   `DELETE /api/reservations/:id` - Eliminar
--   `POST /api/reservations/:id/complete` - Completar → venta
--   `POST /api/reservations/:id/cancel` - Cancelar
-
-**Funcionalidades:**
--   ✅ Formulario de nueva reservación (cliente, barbero, estación, servicio, horario, notas, teléfono).
--   ✅ Lista de reservaciones con filtros y paginación.
--   ✅ Estados: `reservado`, `pagado`, `cancelado`.
--   ✅ Completar reservación genera venta automática.
--   ✅ Posibilidad de añadir productos a una reservación.
-
-**Lógica de Negocio:**
--   Las reservaciones bloquean tiempo en el calendario.
--   Al completarse, se crea una venta automáticamente, actualizando el stock de productos.
--   Las horas de inicio y fin se manejan en UTC para evitar inconsistencias.
-
-### 8. 🗓️ **Calendario** (`/schedule`)
-**Endpoint:** `GET /api/reservations/view/calendar`
-
-**Funcionalidades:**
--   ✅ Vista de calendario semanal con navegación por semanas y días.
--   ✅ Filtro por barbero o vista general.
--   ✅ Añadir cita directamente desde una celda de tiempo libre en el calendario.
--   ✅ Visualización de reservaciones como bloques de tiempo con colores distintivos por barbero y estado.
--   ✅ Indicador de la hora actual.
-
-**Lógica de Negocio:**
--   Muestra reservaciones como bloques de tiempo, calculando su posición y duración en base a la hora UTC.
--   Un clic en una hora libre abre el modal de nueva cita, pre-rellenando la fecha y hora seleccionadas (en UTC).
-
-### 9. 💰 **Ventas** (`/sales`)
-**Endpoints:**
--   `POST /api/sales` - Crear venta directa
--   `GET /api/sales` - Listar ventas (con paginación y filtros)
--   `GET /api/sales/:id` - Obtener venta por ID
--   `GET /api/sales/by-reservation/:reservationId` - Obtener venta por reservación
-
-**Funcionalidades:**
--   ✅ Lista de todas las ventas con filtros por rango de fechas y método de pago.
--   ✅ Modal para registrar ventas directas (sin reservación previa), permitiendo añadir servicios y productos.
--   ✅ Modal para ver detalles de venta (ítems, montos, cliente, barbero, método de pago).
-
-**Lógica de Negocio:**
--   Las ventas pueden originarse de reservaciones completadas o ser ventas directas.
--   Cada venta registra servicios y productos por separado, actualizando el stock de productos.
-
-### 10. 💵 **Pagos a Barberos** (`/payments`)
-**Endpoints:**
--   `GET /api/barber-commissions/monthly-summary`
--   `POST /api/barber-commissions/finalize-payment`
--   `GET /api/barber-commissions/:barberId/services`
--   `GET /api/barber-commissions/:barberId/advances`
-
-**Funcionalidades:**
--   ✅ Resumen mensual de comisiones por barbero, con estado (pendiente/pagado).
--   ✅ Detalle de servicios realizados y adelantos tomados por barbero en un período.
--   ✅ Cálculo automático de comisiones basado en reglas de negocio (sueldo base vs. ventas de servicios).
--   ✅ Registro de adelantos.
--   ✅ Finalización de pagos, generando un registro de pago y una boleta en PDF.
-
-**Lógica de Negocio:**
--   **Cálculo de Comisión:** Si las ventas de servicios del barbero superan el doble de su sueldo base, se aplica una tasa de comisión personalizada. De lo contrario, solo recibe el sueldo base.
--   **Pago Final:** Comisión calculada - Adelantos del mes.
--   **Estados:** `pending`, `paid`.
--   **Boleta de Pago:** Generación de PDF con `jsPDF` y `jspdf-autotable`.
-
-### 11. 📊 **Reportes** (`/reports/*`)
-**Endpoints:** Ver sección "Reportes" en Endpoints Disponibles.
-
-**Funcionalidades:**
--   ✅ Múltiples vistas de reportes interactivos con filtros por fecha.
--   ✅ Gráficos con ApexCharts para visualización de datos.
--   ✅ Exportación de datos a CSV.
--   **Reportes disponibles:**
-    -   Inventario (resumen, bajo stock, movimientos).
-    -   Uso de Estaciones (reservas completadas por estación).
-    -   Frecuencia de Clientes (visitas por cliente).
-    -   Horas Pico (actividad por hora del día).
-    -   Ventas Detallado (ventas individuales).
-    -   Ventas por Tipo (servicios vs. productos, con comparación de períodos).
-    -   Pagos a Barberos (resumen y detalle).
+### 14. 📊 **Reportes** (`/reports/*`)
+- **Funcionalidades:** Múltiples vistas de reportes interactivos (Ventas, Inventario, Uso de Estaciones, etc.) con filtros por fecha y gráficos.
 
 ---
 
 ## 🧠 LÓGICA DE NEGOCIO POR MÓDULO
 
-### 🔐 **Módulo de Autenticación y Usuarios**
-1.  **Login**: Verifica credenciales (email/password), hashea la contraseña con Bcrypt, genera un JWT con `id`, `email` y `role`, y lo retorna.
-2.  **Middleware `authenticateToken`**: Valida el JWT en cada petición, decodifica la información del usuario y la adjunta a `req.user`.
-3.  **Middleware `authorizeRoles`**: Verifica si el `req.user.role` está incluido en los roles permitidos para una ruta específica.
-4.  **Roles**: `administrador` (acceso completo, gestión de usuarios y configuración), `cajero` (acceso a funcionalidades operativas).
-5.  **Gestión de Usuarios**: CRUD completo de usuarios, solo accesible por administradores. Las contraseñas se hashean antes de almacenarse.
+### **Módulo de Inventario, Compras y Ventas (Lógica Clave)**
+1.  **Venta de un Producto de Menú**: Cuando se registra una venta que incluye un `MenuProduct`:
+    - El sistema verifica si el producto es **compuesto** (tiene una receta) o **directo** (vinculado a un `InventoryItem`).
+    - **Si es compuesto**: Se descuenta del stock la cantidad de cada `InventoryItem` especificada en la receta, multiplicada por la cantidad vendida del producto.
+    - **Si es directo**: Se descuenta del stock la cantidad vendida del `InventoryItem` asociado.
+    - El movimiento de salida queda registrado en la tabla `inventory_movements`.
+2.  **Compra de Materias Primas**: Cuando se registra una `Purchase` y se marca como recibida:
+    - Se incrementa el stock de los `InventoryItem`s correspondientes a los detalles de la compra.
+    - El movimiento de entrada queda registrado en la tabla `inventory_movements`.
 
-### 👨‍💼 **Módulo de Barberos**
-1.  **Gestión**: CRUD básico de barberos.
-2.  **Estación**: Cada barbero tiene una `station_id` asignada.
-3.  **Comisiones**: Calculadas dinámicamente en el servicio `barberCommissions.service.ts` basado en las ventas de servicios y el sueldo base.
-4.  **Adelantos**: Se pueden registrar adelantos de pago que se descuentan del pago final de comisiones.
-5.  **Estado**: `is_active` permite la desactivación lógica de barberos.
+### **Módulo de Comisiones de Barberos**
+- **Cálculo de Comisión**: Si el total de ventas de servicios de un barbero en el mes es mayor o igual al doble de su sueldo base, su comisión se calcula como `(Total Ventas Servicios * Tasa de Comisión)`. De lo contrario, su ingreso es solo su sueldo base.
+- **Pago Final**: `(Ingreso Calculado) - (Total de Adelantos del Mes)`.
 
-### 📅 **Módulo de Reservaciones**
-1.  **Creación**: Requiere `barber_id`, `station_id`, `service_id`, `client_name`, `start_time`, `end_time`. `service_price` y `end_time` se calculan automáticamente en el backend.
-2.  **Estados**: `reservado` (inicial), `pagado` (tras completar y generar venta), `cancelado`.
-3.  **Productos en Reserva**: Se pueden añadir productos a una reserva, registrando la cantidad y el precio del producto en el momento de la adición.
-4.  **Calendario**: La vista de calendario (`CalendarView.vue`) muestra las reservas, calculando la posición y duración de los eventos en base a la hora UTC.
-5.  **Conversión a Venta**: Al completar una reserva, se genera una venta automáticamente, incluyendo el servicio principal y los productos añadidos a la reserva.
-
-### 💰 **Módulo de Ventas**
-1.  **Origen**: Pueden ser generadas al completar una reservación o ser ventas directas (sin reservación).
-2.  **Composición**: Una venta puede incluir uno o varios `SaleItem`s, que pueden ser servicios o productos.
-3.  **Cálculo de Montos**: `service_amount` y `products_amount` se calculan por separado, sumando al `total_amount`.
-4.  **Métodos de Pago**: `cash`, `card`, `transfer`, etc.
-5.  **Actualización de Stock**: La venta de productos actualiza automáticamente el `stock_quantity` en el inventario.
-
-### 📊 **Módulo de Reportes**
-1.  **Dashboard**: Proporciona una visión general en tiempo real de métricas clave.
-2.  **Ventas**: Análisis detallado por períodos, tipos de ítems (servicios/productos), y métodos de pago.
-3.  **Barberos**: Reportes de comisiones y ventas de servicios por barbero.
-4.  **Inventario**: Resumen de stock, productos con bajo stock y movimientos históricos.
-5.  **Clientes**: Análisis de frecuencia de visitas.
-6.  **Operativo**: Reportes de uso de estaciones y horas pico.
+### **Módulo de Autenticación y Usuarios**
+- **Roles**: `administrador` (acceso total) y `cajero` (acceso operativo).
+- **Seguridad**: Las contraseñas se hashean con Bcrypt. El acceso a rutas se controla con middlewares en el backend y guardias de navegación en el frontend.
 
 ---
 
 ## 🔄 FLUJO DE DATOS
 
-### 📝 **Flujo Principal: Desde Reservación hasta Pago**
+### 📝 **Flujo Principal: Desde Reservación hasta Venta y Descuento de Stock**
 
 ```mermaid
 graph LR
     A[Cliente solicita cita] --> B{Crear Reservación}
-    B -- Datos de Cliente, Barbero, Servicio, Estación, Horario --> C[API: POST /api/reservations]
-    C -- Reserva Creada (status: 'reservado') --> D[Frontend: Calendario / Lista de Reservas]
-    D -- Barbero atiende / Servicio finalizado --> E{Completar Reservación}
-    E -- Método de Pago --> F[API: POST /api/reservations/:id/complete]
-    F -- Genera Venta (status: 'pagado') --> G[API: POST /api/sales]
-    G -- Venta Creada --> H[Actualizar Stock de Productos]
-    H -- Stock Actualizado --> I[Registrar en Dashboard / Reportes]
-    I -- Datos para Cálculo de Comisión --> J[API: GET /api/barber-commissions/monthly-summary]
-    J -- Resumen de Comisiones --> K[Frontend: Pagos a Barberos]
-    K -- Confirmar Pago --> L[API: POST /api/barber-commissions/finalize-payment]
-    L -- Pago Finalizado --> M[Generar Boleta de Pago (PDF)]
+    B --> C[API: POST /api/reservations]
+    C --> D[Frontend: Calendario muestra la reserva]
+    D --> E{Completar Reservación}
+    E -- Items de venta (servicios y productos de menú) --> F[API: POST /api/reservations/:id/complete]
+    F -- Inicia Transacción --> G{1. Crea la Venta}
+    G --> H{2. Crea los Ítems de Venta}
+    H --> I{3. Actualiza Stock}
+    I -- Por cada Producto de Menú vendido... --> J{Verifica si es Compuesto o Directo}
+    J -- Compuesto --> K{Descuenta Ítems de Inventario según la Receta}
+    J -- Directo --> L{Descuenta el Ítem de Inventario asociado}
+    L --> M{4. Actualiza estado de la Reserva a 'pagado'}
+    K --> M
+    M -- COMMIT Transacción --> N[Venta y Stock Actualizados]
 ```
 
-### 🔄 **Flujo de Estados de Reservación**
+### 🛒 **Flujo de Compras y Abastecimiento de Inventario**
 
-```
-PENDIENTE (inicial)
-    ↓
-RESERVADO (confirmada)
-    ↓
-EN PROCESO (opcional, no implementado explícitamente en el modelo actual)
-    ↓
-PAGADO (al completar y generar venta)
-    ↓
-CANCELADO (por el cliente o administración)
-```
-
-### 💸 **Flujo de Cálculo de Comisiones**
-
-```
-Venta de Servicio (registrada en 'sales' y 'sale_items')
-    ↓
-Servicio 'barberCommissions.service.ts'
-    ↓
-Evalúa: ¿Total Ventas de Servicios del Barbero >= (Sueldo Base * 2)?
-    ↓
-SI: Comisión = Total Ventas de Servicios * Tasa de Comisión del Barbero
-NO: Comisión = Sueldo Base del Barbero
-    ↓
-Pago Bruto = Comisión Calculada
-    ↓
-Adelantos del Mes (registrados en 'barber_advances')
-    ↓
-Pago Final = Pago Bruto - Total Adelantos
+```mermaid
+graph LR
+    A[Admin crea una nueva Compra] --> B{Selecciona Proveedor y añade Ítems}
+    B -- Datos de la compra --> C[API: POST /api/purchases]
+    C -- Inicia Transacción --> D{1. Crea la Compra}
+    D --> E{2. Crea los Detalles de la Compra}
+    E --> F{3. Actualiza Stock}
+    F -- Por cada Ítem en la compra... --> G{Incrementa stock del Ítem de Inventario}
+    G -- COMMIT Transacción --> H[Compra registrada y Stock abastecido]
 ```
 
 ---
 
 ## 🛡️ AUTENTICACIÓN Y AUTORIZACIÓN
 
-### 🔑 **Sistema de Autenticación**
--   **JWT (JSON Web Tokens)**: Utilizado para autenticación sin estado. Los tokens se generan en el backend (`auth.service.ts`) y se verifican mediante el middleware `authenticateToken`.
--   **Almacenamiento**: El token JWT y los datos básicos del usuario se almacenan en `localStorage` en el frontend (`authStore.js`).
--   **Expiración**: Los tokens tienen un tiempo de vida limitado (8 horas). El interceptor de respuesta de Axios en `api.js` maneja la expiración o la invalidez del token, cerrando la sesión del usuario y redirigiéndolo a la página de login.
--   **Interceptors**: Axios intercepta automáticamente las peticiones salientes para añadir el token JWT en el encabezado `Authorization`.
-
-### 👥 **Roles y Permisos**
--   **Administrador**: Acceso completo a todas las funcionalidades, incluyendo la gestión de usuarios y configuraciones del sistema.
--   **Cajero**: Acceso a funcionalidades operativas como la gestión de reservas, ventas, barberos, estaciones, servicios y productos, pero sin acceso a la gestión de usuarios o configuraciones sensibles.
--   El rol se almacena en el JWT y se verifica mediante el middleware `authorizeRoles`.
-
-### 🛡️ **Middleware de Seguridad**
--   `authenticateToken`: Middleware de Express que verifica la validez del JWT. Si es válido, decodifica el token y adjunta la información del usuario (`id`, `email`, `role`) al objeto `req`.
--   `authorizeRoles`: Middleware de Express que toma una lista de roles permitidos y verifica si el rol del usuario autenticado (`req.user.role`) está incluido en esa lista. Si no, deniega el acceso con un estado 403.
-
-### 🔒 **Rutas Protegidas**
--   Todas las rutas de la API requieren autenticación (`authenticateToken`) excepto `/auth/login`.
--   Rutas sensibles (ej. `/api/settings`, `/api/auth/users`) están protegidas adicionalmente con `authorizeRoles('administrador')`.
--   En el frontend, `router.beforeEach` en `router/index.js` verifica la autenticación antes de permitir la navegación a cualquier ruta que no sea `/login`.
+- **Autenticación**: Basada en **JWT**. El token se almacena en `localStorage` y se envía en el header `Authorization` de cada petición a través de un interceptor de Axios.
+- **Autorización**: Basada en **roles** (`administrador`, `cajero`). El rol se incluye en el payload del JWT y es verificado en el backend por un middleware (`authorizeRoles`) para proteger rutas sensibles.
+- **Protección de Rutas Frontend**: `router.beforeEach` en Vue Router previene el acceso a vistas protegidas si el usuario no está autenticado.
+- **Manejo de Sesión Expirada**: Un interceptor de respuesta de Axios detecta errores 401 (No autorizado), cierra la sesión en el frontend (`authStore.logout()`) y redirige al usuario a la página de login.
 
 ---
 
 ## 📈 **MÉTRICAS Y KPIs DEL SISTEMA**
 
-### 📊 **Dashboard Principal**
--   **Ventas Diarias**: Desglose de ventas de servicios y productos para el día actual.
--   **Reservas del Día**: Conteo de reservas próximas y completadas para el día actual.
--   **Clientes Atendidos**: Conteo de reservas completadas para el día actual.
--   **Ingresos Mensuales**: Total de ventas acumuladas en el mes actual.
--   **Servicios Más Populares**: Gráfico de los servicios más vendidos en la última semana.
--   **Tendencia de Ventas**: Gráficos de área mostrando las ventas diarias de productos y servicios en los últimos 30 días.
-
-### 💰 **Métricas Financieras**
--   **Total de Ventas por Período**: Reportes detallados de ventas con filtros por fecha.
--   **Comisiones por Barbero**: Cálculo dinámico y resumen mensual de comisiones, incluyendo adelantos.
--   **Rentabilidad por Servicio/Producto**: Implícito en los reportes de ventas por tipo.
--   **Control de Gastos**: Registro de adelantos a barberos.
-
-### 👥 **Métricas Operativas**
--   **Utilización de Estaciones**: Reporte de cuántas reservas completadas se realizaron por estación.
--   **Frecuencia de Clientes**: Reporte de cuántas veces un cliente ha visitado la barbería en un período.
--   **Horas Pico de Actividad**: Identificación de las horas del día con mayor número de reservas.
--   **Performance por Barbero**: Implícito en los reportes de comisiones y ventas detalladas por barbero.
+- **Financieras**: Ventas diarias/mensuales, desglose por servicios/productos, comisiones por barbero, valor total del inventario.
+- **Operativas**: Tasa de ocupación de estaciones, frecuencia de clientes, horas pico de reservas, rendimiento por barbero.
+- **Inventario**: Nivel de stock actual, productos por debajo del mínimo, historial de movimientos por ítem.
 
 ---
 
 ## 🚀 **TECNOLOGÍAS Y HERRAMIENTAS**
 
 ### **Backend**
--   **Node.js**: Entorno de ejecución JavaScript.
--   **Express.js**: Framework web para Node.js.
--   **TypeScript**: Lenguaje de programación tipado.
--   **PostgreSQL**: Base de datos relacional.
--   **`pg`**: Cliente de PostgreSQL para Node.js.
--   **JWT**: JSON Web Tokens para autenticación.
--   **Swagger-jsdoc & Swagger-ui-express**: Documentación de API.
--   **Day.js**: Manipulación de fechas.
--   **Bcrypt**: Hashing de contraseñas.
--   **CORS**: Middleware para habilitar CORS.
--   **Dotenv**: Carga de variables de entorno.
--   **Nodemon**: Utilidad para desarrollo.
+-   Node.js, Express.js, TypeScript, PostgreSQL, `pg`, JWT, Swagger, Day.js, Bcrypt, CORS, Dotenv, Nodemon.
 
 ### **Frontend**
--   **Vue.js 3**: Framework progresivo.
--   **Pinia**: Gestión de estado.
--   **Vue Router 4**: Enrutamiento.
--   **Tailwind CSS**: Framework CSS.
--   **Axios**: Cliente HTTP.
--   **ApexCharts & Vue3-Apexcharts**: Librería de gráficos.
--   **Day.js**: Manipulación de fechas.
--   **jsPDF & jspdf-autotable**: Generación de PDFs.
--   **Vite**: Herramienta de construcción.
+-   Vue.js 3, Pinia, Vue Router 4, Tailwind CSS, Axios, ApexCharts, Day.js, jsPDF, Vite.
 
 ### **Herramientas de Desarrollo**
--   **ESLint**: Linter para código JavaScript/TypeScript.
--   **Prettier**: Formateador de código.
--   **Jest**: Framework de testing (para Backend).
--   **TS-Node**: Ejecución de TypeScript directamente (para Backend).
--   **Cross-env**: Configuración de variables de entorno (para tests de Backend).
+-   ESLint, Prettier, Jest (Backend), TS-Node (Backend), Cross-env (Backend).
 
 ---
 
 ## 📱 **CARACTERÍSTICAS TÉCNICAS**
 
-### ⚡ **Performance**
--   **Lazy Loading de Rutas**: En el frontend, las rutas se cargan bajo demanda para reducir el tiempo de carga inicial.
--   **Paginación**: Implementada en listas largas (servicios, reservas, ventas) para optimizar la carga de datos.
--   **Consultas Optimizadas**: Uso de `Promise.all` en el backend para ejecutar múltiples consultas a la base de datos en paralelo, reduciendo la latencia.
--   **Pool de Conexiones DB**: Gestión eficiente de las conexiones a la base de datos para reducir la sobrecarga de establecer nuevas conexiones.
-
-### 📱 **Responsive Design**
--   **Mobile-first approach**: El diseño se concibe primero para dispositivos móviles y luego se adapta a pantallas más grandes.
--   **Breakpoints adaptativos**: Utilización de Tailwind CSS para un diseño que se ajusta a diferentes tamaños de pantalla.
--   **Navegación touch-friendly**: Componentes de navegación adaptados para interacción táctil.
--   **Tablas responsivas**: Las tablas se adaptan o se transforman en vistas de tarjeta en dispositivos móviles.
-
-### 🔧 **Mantenibilidad**
--   **Código Modular y Reutilizable**: Separación clara de componentes, servicios, stores y módulos en el frontend y backend.
--   **Separación de Responsabilidades**: Adherencia a principios SOLID y patrones de diseño para una lógica clara y fácil de entender.
--   **Documentación Completa**: Este documento sirve como referencia central para el entendimiento del sistema.
--   **Tipado Estático (TypeScript)**: Mejora la legibilidad, detecta errores en tiempo de desarrollo y facilita el refactoring.
--   **Manejo Centralizado de Errores**: Interceptores de Axios en el frontend y middlewares de Express en el backend para un manejo consistente de errores.
--   **Cierre Elegante de Recursos**: Gestión del ciclo de vida del pool de conexiones a la base de datos para evitar fugas de recursos.
-
----
-
-Este sistema de barbería ofrece una solución completa para la gestión operativa y administrativa, desde la agenda de citas y el control de inventario hasta el cálculo de comisiones y la generación de reportes, todo ello con una interfaz moderna, robusta y fácil de usar.
+- **Performance**: Paginación en listas largas, carga bajo demanda de rutas (Lazy Loading), consultas optimizadas con `Promise.all` en el backend, y un pool de conexiones a la base de datos para reutilización.
+- **Responsive Design**: Uso de Tailwind CSS para un diseño `mobile-first` que se adapta a cualquier tamaño de pantalla.
+- **Mantenibilidad**: Código modular y reutilizable, separación de responsabilidades, tipado estático con TypeScript, y manejo centralizado de estado (Pinia) y errores (interceptores de Axios).
+- **Cierre Elegante de Recursos**: Gestión del ciclo de vida del pool de conexiones a la base de datos para evitar fugas de recursos en reinicios del servidor.
