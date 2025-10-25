@@ -1,0 +1,1 @@
+ALTER TABLE sale_items ADD COLUMN original_unit_price REAL NOT NULL DEFAULT 0;

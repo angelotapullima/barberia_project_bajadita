@@ -68,7 +68,7 @@ CREATE TABLE detalles_compra (
     -- Columna clave para la lógica de negocio
     tipo_item VARCHAR(50) NOT NULL, -- 'producto_venta', 'insumo_servicio', 'gasto_activo'
     -- ID opcional para vincular con el inventario existente
-    referencia_id INT NULL, 
+    referencia_id INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (compra_id) REFERENCES compras(id)
@@ -92,6 +92,7 @@ Se desarrollarán nuevos servicios y controladores para manejar la lógica de ne
 **b. Lógica de Negocio Clave (`POST /api/compras`)**
 
 El servicio que maneje la creación de una compra deberá:
+
 1.  Validar los datos de entrada.
 2.  Crear el registro en la tabla `compras`.
 3.  Iterar sobre cada ítem en `detalles_compra` del request.
@@ -106,25 +107,29 @@ El servicio que maneje la creación de una compra deberá:
 Se crearán nuevas vistas y componentes en Vue.js.
 
 **a. Nueva Sección en el Menú:**
-   - Añadir "Gestión de Compras" en el `Sidebar.vue`.
+
+- Añadir "Gestión de Compras" en el `Sidebar.vue`.
 
 **b. Módulo de Proveedores:**
-   - Una nueva vista con una tabla para el CRUD de proveedores.
+
+- Una nueva vista con una tabla para el CRUD de proveedores.
 
 **c. Módulo de Compras:**
-   - **Vista Principal:** Una tabla listando todas las compras realizadas. Cada fila mostrará datos clave (ID, Proveedor, Fecha, Total) y tendrá un botón para ver el detalle.
-   - **Formulario "Registrar Nueva Compra":**
-     - Un modal o una nueva página.
-     - Campos para seleccionar `Proveedor`, `Fecha` y `Nro. Comprobante`.
-     - Una tabla dinámica para añadir los `detalles_compra`:
-       - Columnas: `Descripción`, `Cantidad`, `Precio Unitario`, `Subtotal`.
-       - **Columna "Clasificación"**: Un dropdown para seleccionar el `tipo_item` (`Producto para Venta`, `Insumo para Servicio`, `Gasto/Activo`).
-       - **Columna "Asociar a"**: Un campo de autocompletado que permitirá buscar en `products` o `inventory_items` si el tipo seleccionado lo requiere.
-     - El formulario calculará el total automáticamente.
+
+- **Vista Principal:** Una tabla listando todas las compras realizadas. Cada fila mostrará datos clave (ID, Proveedor, Fecha, Total) y tendrá un botón para ver el detalle.
+- **Formulario "Registrar Nueva Compra":**
+  - Un modal o una nueva página.
+  - Campos para seleccionar `Proveedor`, `Fecha` y `Nro. Comprobante`.
+  - Una tabla dinámica para añadir los `detalles_compra`:
+    - Columnas: `Descripción`, `Cantidad`, `Precio Unitario`, `Subtotal`.
+    - **Columna "Clasificación"**: Un dropdown para seleccionar el `tipo_item` (`Producto para Venta`, `Insumo para Servicio`, `Gasto/Activo`).
+    - **Columna "Asociar a"**: Un campo de autocompletado que permitirá buscar en `products` o `inventory_items` si el tipo seleccionado lo requiere.
+  - El formulario calculará el total automáticamente.
 
 ## 3. Resumen y Beneficios
 
 Este módulo centralizará la gestión de adquisiciones y gastos, proporcionando:
+
 - **Trazabilidad:** Control total sobre las compras y los gastos.
 - **Automatización:** Actualización automática del stock al registrar una compra.
 - **Inteligencia de Negocio:** Datos para calcular la rentabilidad y analizar los gastos operativos.
@@ -134,9 +139,11 @@ Este módulo centralizará la gestión de adquisiciones y gastos, proporcionando
 Para un desarrollo ordenado, el proyecto se dividirá en dos fases.
 
 ### Fase 1: Módulo de Compras (Cimientos)
+
 Corresponde a todo lo descrito en la sección 2. El objetivo es controlar las adquisiciones, registrar gastos y automatizar la carga de stock de productos e insumos.
 
 ### Fase 2: Consumo de Insumos en Servicios (Inteligencia de Negocio)
+
 Una vez completada la Fase 1, se añadirá la lógica para calcular la rentabilidad real de los servicios.
 
 1.  **Base de Datos:** Crear una tabla de unión `servicio_insumos` (`servicio_id`, `insumo_id`, `cantidad_consumida`).
