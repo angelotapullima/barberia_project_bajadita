@@ -188,7 +188,7 @@ La API RESTful proporciona los siguientes endpoints, protegidos por autenticaci�
 ```
 src/
 ├── assets/          # Archivos estáticos como imágenes o iconos.
-├── components/      # Componentes Vue reutilizables (modales, tablas, selectores, etc.).
+├── components/      # Componentes Vue reutilizables (modales, tablas, selectores, PurchaseItemSelector, etc.).
 ├── router/          # Configuración de Vue Router para la navegación.
 ├── services/        # Servicios JavaScript para interacción con la API (Axios) y otras utilidades.
 ├── stores/          # Módulos de Pinia para la gestión del estado global de la aplicación.
@@ -212,7 +212,7 @@ src/
 | `/suppliers`    | `SuppliersView`            | `Suppliers`                   | Gestión de proveedores.                                       |
 | `/purchases`    | `PurchasesView`            | `Purchases`                   | Gestión de compras a proveedores.                             |
 | `/reservations` | `ReservationsView`         | `Reservations`                | Gestión de reservaciones (CRUD, paginación).                  |
-| `/schedule`     | `CalendarView`             | `Schedule`                    | Vista de calendario semanal de citas.                         |
+| `/schedule`     | `DailyCalendarView`, `WeeklyCalendarView` | `Schedule`                    | Vista de calendario diario y semanal de citas.         |
 | `/sales`        | `SalesView`                | `SalesRegistration`           | Registro y listado de ventas.                                 |
 | `/payments`     | `BarberPaymentsReportView` | `Payments`                    | Resumen de pagos a barberos.                                  |
 | `/settings`     | `SettingsView`             | `Settings`                    | Configuración del sistema y gestión de usuarios (solo Admin). |
@@ -230,10 +230,11 @@ src/
 - **`menuProductStore`**: Gestiona el estado y las operaciones CRUD para los productos de menú.
 - **`supplierStore`**: Gestiona el estado de los proveedores.
 - **`purchaseStore`**: Gestiona el estado de las compras.
-- **`reservationStore`**: Gestiona la lista de reservaciones y sus operaciones.
+- **`reservationStore`**: Gestiona la lista de reservaciones y sus operaciones, incluyendo `calendarReservations` para las vistas de calendario y la acción `fetchCalendarReservations`.
 - **`salesStore`**: Gestiona la lista de ventas.
 - **`reportStore`**: Almacena los datos de los diversos reportes, incluyendo los totales generales de ventas (`totalComprehensiveSales`, `totalServiceAmount`, `totalProductsAmount`, `totalAmount`) y el total de cortesías (`totalCourtesyAmount`).
 - **`paymentStore`**: Almacena temporalmente la información de un pago de comisión seleccionado.
+- **`PurchaseItemSelector`**: Este componente interactúa con `menuProductStore` e `inventoryItemStore` para la selección y creación de ítems en el flujo de compras.
 
 ### Componentes Reutilizables Clave
 
@@ -245,6 +246,7 @@ src/
 - **`MenuProductFormModal.vue`**: Formulario para productos de menú (con lógica para recetas).
 - **`SaleRegistrationModal.vue`**: Modal para registrar ventas, permite añadir servicios y productos de menú.
 - **`ReservationFormModal.vue`**: Formulario para crear/editar una reserva.
+- **`PurchaseItemSelector.vue`**: Componente para seleccionar o crear ítems de inventario/productos de menú en línea dentro del formulario de compra.
 - **`Sidebar.vue`**: Barra lateral de navegación principal de la aplicación.
 
 ---
@@ -300,7 +302,7 @@ src/
 
 ### 10. 📅 **Reservaciones y Calendario** (`/reservations`, `/schedule`)
 
-- **Funcionalidades:** Formulario de nueva reserva, lista paginada, estados (`reservado`, `pagado`, `cancelado`). La vista de calendario (`/schedule`) muestra las citas por semana y permite crear reservas desde los huecos libres.
+- **Funcionalidades:** Formulario de nueva reserva, lista paginada, estados (`reservado`, `pagado`, `cancelado`). Las vistas de calendario (`/schedule`) muestran las citas por día y semana, y permiten crear reservas desde los huecos libres.
 - **Lógica:** Completar una reserva genera una venta automática. Las horas se manejan en UTC.
 
 ### 11. 💰 **Ventas** (`/sales`)
@@ -377,17 +379,24 @@ graph LR
     M -- COMMIT Transacción --> N[Venta y Stock Actualizados]
 ```
 
-### 🛒 **Flujo de Compras y Abastecimiento de Inventario**
+### 🛒 **Flujo de Compras y Abastecimiento de Inventario (Mejorado)**
+
+El proceso de registro de compras ha sido optimizado para mejorar la experiencia del usuario, permitiendo la creación de proveedores e ítems de inventario/productos de menú directamente desde el formulario de compra, sin necesidad de navegar a vistas separadas.
 
 ```mermaid
 graph LR
-    A[Admin crea una nueva Compra] --> B{Selecciona Proveedor y añade Ítems}
-    B -- Datos de la compra --> C[API: POST /api/purchases]
-    C -- Inicia Transacción --> D{1. Crea la Compra}
-    D --> E{2. Crea los Detalles de la Compra}
-    E --> F{3. Actualiza Stock}
-    F -- Por cada Ítem en la compra... --> G{Incrementa stock del Ítem de Inventario}
-    G -- COMMIT Transacción --> H[Compra registrada y Stock abastecido]
+    A[Admin inicia nueva Compra] --> B{Selecciona Proveedor}
+    B -- Si no existe --> C[Crear Proveedor (integrado en selector)]
+    C --> B
+    B -- Selecciona Ítems de Compra --> D{Añade Detalle de Compra}
+    D -- Si Ítem no existe --> E[Crear Ítem (integrado en selector de detalle)]
+    E --> D
+    D --> F[API: POST /api/purchases]
+    F -- Inicia Transacción --> G{1. Crea la Compra}
+    G --> H{2. Crea los Detalles de la Compra}
+    H --> I{3. Actualiza Stock}
+    I -- Por cada Ítem de Inventario en la compra... --> J{Incrementa stock del Ítem de Inventario}
+    J -- COMMIT Transacción --> K[Compra registrada y Stock abastecido]
 ```
 
 ---
