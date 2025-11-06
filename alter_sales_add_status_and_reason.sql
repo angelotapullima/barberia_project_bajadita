@@ -1,3 +1,0 @@
-ALTER TABLE sales ADD COLUMN status TEXT DEFAULT 'completed';
-ALTER TABLE sales ADD COLUMN cancellation_reason TEXT;
-ALTER TABLE sales ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE;

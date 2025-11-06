@@ -132,7 +132,7 @@ La API RESTful proporciona los siguientes endpoints, protegidos por autenticaci�
 | POST                   | `/api/reservations/:id/complete`  | Completa una reserva y genera una venta.   | `authenticateToken` |
 | POST                   | `/api/reservations/:id/cancel`    | Cancela una reserva.                       | `authenticateToken` |
 | GET                    | `/api/reservations/view/calendar` | Obtiene datos para la vista de calendario. | `authenticateToken` |
-| GET, POST              | `/api/sales`                      | Listar y crear ventas directas.            | `authenticateToken` |
+| POST                   | `/api/sales`                      | Crea una venta directa de productos.       | `authenticateToken` |
 | GET                    | `/api/sales/:id`                  | Obtiene una venta por su ID.               | `authenticateToken` |
 
 #### 💵 Comisiones y Pagos
@@ -162,9 +162,16 @@ La API RESTful proporciona los siguientes endpoints, protegidos por autenticaci�
 | -------- | --------------- | -------------------------------------- | ------------------------------------------------------ |
 | GET, PUT | `/api/settings` | Gestiona la configuración del sistema. | `authenticateToken`, `authorizeRoles('administrador')` |
 
+#### 🛒 Punto de Venta (POS)
+
+| Método | Endpoint              | Descripción                                                              | Middleware          |
+| ------ | --------------------- | ------------------------------------------------------------------------ | ------------------- |
+| GET    | `/api/pos/master-data` | Obtiene datos maestros (servicios, productos de menú) para el POS. | `authenticateToken` |
+
 ### Modelos de Datos (Interfaces TypeScript)
 
 - **`Person`**: `id`, `dni`, `first_name`, `last_name`, `email`, `phone`, `address`, `birth_date`. Representa una entidad humana o legal.
+- **`Client`**: `id`, `person_id`, `start_date`, `loyalty_points`, `notes`. Representa un cliente del negocio, vinculado a una `Person`.
 - **`User`**: `id`, `person_id`, `password` (hash), `role` (`administrador`, `cajero`). Usuario del sistema con credenciales.
 - **`Barber`**: `id`, `name`, `email`, `phone`, `hire_date`, `base_salary`, `commission_rate`, `station_id`, `is_active`. Empleado que realiza servicios.
 - **`Station`**: `id`, `name`, `description`, `is_active`. Puesto de trabajo físico.
@@ -175,8 +182,8 @@ La API RESTful proporciona los siguientes endpoints, protegidos por autenticaci�
 - **`Supplier`**: `id`, `name`, `ruc`, `phone`, `email`, `address`, `person_id`. Proveedor de insumos.
 - **`Purchase`**: `id`, `supplier_id`, `purchase_date`, `total_amount`, `status`. Transacción de compra a un proveedor.
 - **`PurchaseDetail`**: `purchase_id`, `item_description`, `quantity`, `unit_price`. Ítems dentro de una compra.
-- **`Reservation`**: `id`, `barber_id`, `station_id`, `service_id`, `client_name`, `start_time`, `end_time`, `status`. Cita agendada.
-- **`Sale`**: `id`, `reservation_id`, `barber_id`, `total_amount`, `payment_method`, `sale_date`. Transacción de venta finalizada.
+- **`Reservation`**: `id`, `client_id`, `barber_id`, `station_id`, `service_id`, `start_time`, `end_time`, `status`. Cita agendada, ahora vinculada a un `Client`.
+- **`Sale`**: `id`, `reservation_id`, `client_id`, `total_amount`, `payment_method`, `sale_date`. Transacción de venta finalizada, ahora vinculada a un `Client`.
 - **`SaleItem`**: `sale_id`, `item_type` (`service`, `product`), `item_id`, `quantity`, `original_unit_price`, `unit_price`, `is_courtesy`, `courtesy_reason`. Ítems dentro de una venta.
 
 ---
@@ -213,13 +220,13 @@ src/
 | `/purchases`    | `PurchasesView`            | `Purchases`                   | Gestión de compras a proveedores.                             |
 | `/reservations` | `ReservationsView`         | `Reservations`                | Gestión de reservaciones (CRUD, paginación).                  |
 | `/schedule`     | `DailyCalendarView`, `WeeklyCalendarView` | `Schedule`                    | Vista de calendario diario y semanal de citas.         |
-| `/sales`        | `SalesView`                | `SalesRegistration`           | Registro y listado de ventas.                                 |
 | `/payments`     | `BarberPaymentsReportView` | `Payments`                    | Resumen de pagos a barberos.                                  |
 | `/settings`     | `SettingsView`             | `Settings`                    | Configuración del sistema y gestión de usuarios (solo Admin). |
 | `/reports/*`    | Vistas de Reportes         | Diversos reportes de negocio. |
 
 ### 🗃️ STORES DE PINIA
 
+- **`clientStore`**: Gestiona el estado y las operaciones para los clientes (ej. buscar o crear un cliente a partir de una persona).
 - **`authStore`**: Gestiona el estado de autenticación del usuario (token JWT, datos del usuario, roles).
 - **`personStore`**: Gestiona el estado y las operaciones CRUD para las personas.
 - **`userStore`**: Gestiona la lista de usuarios (solo para administradores).
@@ -230,8 +237,8 @@ src/
 - **`menuProductStore`**: Gestiona el estado y las operaciones CRUD para los productos de menú.
 - **`supplierStore`**: Gestiona el estado de los proveedores.
 - **`purchaseStore`**: Gestiona el estado de las compras.
-- **`reservationStore`**: Gestiona la lista de reservaciones y sus operaciones, incluyendo `calendarReservations` para las vistas de calendario y la acción `fetchCalendarReservations`.
-- **`salesStore`**: Gestiona la lista de ventas.
+- **`reservationStore`**: Gestiona la lista de reservaciones y sus operaciones, incluyendo `calendarReservations` para las vistas de calendario.
+- **`salesStore`**: Gestiona la lista de ventas, incluyendo la creación de ventas directas (`createDirectSale`).
 - **`reportStore`**: Almacena los datos de los diversos reportes, incluyendo los totales generales de ventas (`totalComprehensiveSales`, `totalServiceAmount`, `totalProductsAmount`, `totalAmount`) y el total de cortesías (`totalCourtesyAmount`).
 - **`paymentStore`**: Almacena temporalmente la información de un pago de comisión seleccionado.
 - **`PurchaseItemSelector`**: Este componente interactúa con `menuProductStore` e `inventoryItemStore` para la selección y creación de ítems en el flujo de compras.
@@ -244,7 +251,8 @@ src/
 - **`SupplierFormModal.vue`**: Formulario para crear/editar proveedores.
 - **`InventoryItemFormModal.vue`**: Formulario para crear/editar ítems de inventario.
 - **`MenuProductFormModal.vue`**: Formulario para productos de menú (con lógica para recetas).
-- **`SaleRegistrationModal.vue`**: Modal para registrar ventas, permite añadir servicios y productos de menú.
+- **`CompleteSaleModal.vue`**: Modal para completar ventas ligadas a reservas.
+- **`DirectSaleModal.vue`**: Nuevo modal para registrar ventas directas de productos.
 - **`ReservationFormModal.vue`**: Formulario para crear/editar una reserva.
 - **`PurchaseItemSelector.vue`**: Componente para seleccionar o crear ítems de inventario/productos de menú en línea dentro del formulario de compra.
 - **`Sidebar.vue`**: Barra lateral de navegación principal de la aplicación.
@@ -300,14 +308,14 @@ src/
 - **Funcionalidades:** Registro de las compras a proveedores. Se selecciona un proveedor, se añaden los ítems comprados (que se relacionan con los `Ítems de Inventario`) y se registra el total.
 - **Lógica:** Al registrar una compra, se actualiza automáticamente el stock de los `Ítems de Inventario` correspondientes.
 
-### 10. 📅 **Reservaciones y Calendario** (`/reservations`, `/schedule`)
+### 10. 📅 **Reservaciones y Calendario** (`/schedule`)
 
-- **Funcionalidades:** Formulario de nueva reserva, lista paginada, estados (`reservado`, `pagado`, `cancelado`). Las vistas de calendario (`/schedule`) muestran las citas por día y semana, y permiten crear reservas desde los huecos libres.
+- **Funcionalidades:** La vista de calendario (`/schedule`) muestra las citas por día y semana. El botón "Nuevo" permite iniciar una "Nueva Reserva" (abriendo el `ReservationFormModal`) o una "Nueva Venta" (abriendo el `DirectSaleModal`).
 - **Lógica:** Completar una reserva genera una venta automática. Las horas se manejan en UTC.
 
-### 11. 💰 **Ventas** (`/sales`)
+### 11. 💰 **Ventas**
 
-- **Funcionalidades:** Lista de ventas con filtros. Modal para registrar ventas directas, permitiendo añadir servicios y `Productos de Menú`.
+- **Funcionalidades:** La creación de ventas directas se realiza a través del `DirectSaleModal` accesible desde la vista de calendario. Los detalles de ventas individuales se pueden ver en el `SaleDetailsModal`.
 - **Lógica:** Las ventas actualizan el stock de `Ítems de Inventario` según la lógica de productos directos o compuestos.
 
 ### 12. 💵 **Pagos a Barberos** (`/payments`)
@@ -364,11 +372,11 @@ src/
 ```mermaid
 graph LR
     A[Cliente solicita cita] --> B{Crear Reservación}
-    B --> C[API: POST /api/reservations]
+    B --> C[API: POST /api/reservations (con client_id)]
     C --> D[Frontend: Calendario muestra la reserva]
     D --> E{Completar Reservación}
     E -- Items de venta (servicios y productos de menú, con posible cortesía) --> F[API: POST /api/reservations/:id/complete]
-    F -- Inicia Transacción --> G{1. Crea la Venta (calcula totales sin cortesías)}
+    F -- Inicia Transacción --> G{1. Crea la Venta (con client_id, calcula totales sin cortesías)}
     G --> H{2. Crea los Ítems de Venta (con precio 0 si es cortesía)}
     H --> I{3. Actualiza Stock}
     I -- Por cada Producto de Menú vendido... --> J{Verifica si es Compuesto o Directo}
