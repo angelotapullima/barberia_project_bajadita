@@ -315,13 +315,13 @@ src/
 
 ### 11. 💰 **Ventas**
 
-- **Funcionalidades:** La creación de ventas directas se realiza a través del `DirectSaleModal` accesible desde la vista de calendario. Los detalles de ventas individuales se pueden ver en el `SaleDetailsModal`.
+- **Funcionalidades:** La creación de ventas directas (sin reserva) se realiza a través del `DirectSaleModal`, accesible desde la vista de calendario. Estas ventas no se asocian a un barbero y, por lo tanto, no generan comisiones. Los detalles de cualquier venta se pueden ver en el `SaleDetailsModal` o en el reporte de ventas.
 - **Lógica:** Las ventas actualizan el stock de `Ítems de Inventario` según la lógica de productos directos o compuestos.
 
 ### 12. 💵 **Pagos a Barberos** (`/payments`)
 
 - **Funcionalidades:** Resumen mensual de comisiones por barbero, detalle de servicios y adelantos, y finalización de pagos con generación de boleta en PDF.
-- **Lógica:** El cálculo de comisión se basa en reglas de negocio (sueldo base vs. ventas).
+- **Lógica:** El cálculo de comisión se basa en las ventas generadas a partir de **reservas completadas**. Las ventas directas no se incluyen en este cálculo.
 
 ### 13. ⚙️ **Configuración** (`/settings`)
 
@@ -332,7 +332,7 @@ src/
 
 ### 14. 📊 **Reportes** (`/reports/*`)
 
-- **Funcionalidades:** Múltiples vistas de reportes interactivos (Ventas, Inventario, Uso de Estaciones, etc.) con filtros por fecha y gráficos.
+- **Funcionalidades:** Múltiples vistas de reportes interactivos (Ventas, Inventario, Uso de Estaciones, etc.) con filtros por fecha y gráficos. La vista de "Ventas Detallado" funciona como el historial principal de todas las ventas.
 
 ---
 
@@ -340,23 +340,62 @@ src/
 
 ### **Módulo de Inventario, Compras y Ventas (Lógica Clave)**
 
-1.  **Venta de un Producto de Menú**: Cuando se registra una venta que incluye un `MenuProduct`:
-    - El sistema verifica si el producto es **compuesto** (tiene una receta) o **directo** (vinculado a un `InventoryItem`).
-    - **Si es compuesto**: Se descuenta del stock la cantidad de cada `InventoryItem` especificada en la receta, multiplicada por la cantidad vendida del producto.
-    - **Si es directo**: Se descuenta del stock la cantidad vendida del `InventoryItem` asociado.
-    - El movimiento de salida queda registrado en la tabla `inventory_movements`.
-2.  **Venta de Cortesía**: Cuando un ítem en una venta es marcado como cortesía:
+El sistema de inventario está diseñado para proporcionar un control granular sobre todos los activos y consumibles del negocio. El flujo de datos se centra en el `Ítem de Inventario` como entidad central.
+
+1.  **Tipos de Ítem de Inventario (`inventory_item_type_enum`):** La correcta clasificación de un ítem es fundamental para la lógica de negocio.
+    *   **`RAW_MATERIAL` (Materia Prima):** Ingredientes para crear otros productos. Su stock se reduce cuando un `Producto del Menú` de tipo "Compuesto" que los contiene en su receta es vendido.
+        *   *Ejemplo:* "Pigmento de color", "Peróxido".
+    *   **`CONSUMABLE_SUPPLY` (Insumo Consumible):** Ítems que se gastan durante la prestación de un `Servicio`. Su stock se reduce cuando se vende un servicio que los tiene configurados como insumos.
+        *   *Ejemplo:* "Champú a granel", "Navajas desechables", "Gel de peinado".
+    *   **`OPERATIONAL_ASSET` (Activo Operacional):** Herramientas y equipo reutilizable del negocio. Se registran para control de patrimonio. Su stock no se descuenta automáticamente con las ventas.
+        *   *Ejemplo:* "Máquinas de cortar", "Tijeras", "Toallas".
+    *   **`RETAIL_PRODUCT` (Producto de Venta):** Ítems comprados para ser revendidos tal cual. Su stock se descuenta cuando un `Producto del Menú` de tipo "Directo" vinculado a ellos es vendido.
+        *   *Ejemplo:* "Botella de cera marca X", "Lata de bebida".
+
+2.  **Flujo de Entrada de Stock (Adquisiciones):**
+    *   Una `Adquisición` con sus `Líneas de Adquisición` crea un movimiento de inventario de tipo `IN` para cada `Ítem de Inventario` comprado. Esto incrementa la cantidad de `current_stock` en la vista `v_inventory_stock`.
+
+3.  **Flujo de Salida de Stock (Ventas y Bajas):**
+    *   La función `updateStockFromSale` se encarga de procesar todos los ítems de una venta de forma recursiva.
+    *   **Venta de un Combo/Bundle:** Si un ítem de venta es de tipo `bundle`, el sistema consulta `T_BAR_BUNDLE_ITEMS` para "desempacar" su contenido. Luego, vuelve a llamar a la función de actualización de stock para procesar cada servicio y producto del combo como si se hubieran vendido individualmente.
+    *   **Venta de un Servicio:** El sistema consulta la tabla `T_BAR_SERVICE_SUPPLIES` para encontrar los insumos y cantidades asociadas al `service_id` vendido. Por cada insumo, se crea un movimiento de tipo `OUT`, reduciendo el stock.
+    *   **Venta de un Producto del Menú:**
+        *   **Tipo "Directo":** Se busca el `inventory_item_id` asociado al `menu_product_id` y se crea un movimiento `OUT` para ese ítem.
+        *   **Tipo "Compuesto":** El sistema consulta `product_recipes` para encontrar todos los `inventory_item_id` y sus `quantity_used` para el `menu_product_id` vendido. Se crea un movimiento `OUT` por cada ítem en la receta.
+    *   **Bajas manuales:** La creación de un registro en la tabla `disposals` genera un movimiento de tipo `DISPOSAL`, reduciendo el stock.
+
+4.  **Trazabilidad Total (`inventory_movements`):** Cada uno de los flujos anteriores (entrada y salida) se registra obligatoriamente en la tabla `inventory_movements`, proporcionando un historial auditable de cada cambio de stock para cada ítem.
+
+5.  **Venta de Cortesía**: Cuando un ítem en una venta es marcado como cortesía:
     - El `unit_price` y `total_price` del `SaleItem` se registran como 0.
     - El `original_unit_price` se preserva para poder calcular cuánto dinero se ha "perdido" en cortesías.
     - El `total_amount` de la `Sale` no incluye los montos de los ítems de cortesía.
-2.  **Compra de Materias Primas**: Cuando se registra una `Purchase` y se marca como recibida:
-    - Se incrementa el stock de los `InventoryItem`s correspondientes a los detalles de la compra.
-    - El movimiento de entrada queda registrado en la tabla `inventory_movements`.
 
 ### **Módulo de Comisiones de Barberos**
 
-- **Cálculo de Comisión**: Si el total de ventas de servicios de un barbero en el mes es mayor o igual al doble de su sueldo base, su comisión se calcula como `(Total Ventas Servicios * Tasa de Comisión)`. De lo contrario, su ingreso es solo su sueldo base.
+- **Cálculo de Comisión**: Se basa únicamente en las ventas generadas a través de la finalización de una reserva (`reservations.status = 'pagado'`). Si el total de ventas de servicios de un barbero en el mes es mayor o igual al doble de su sueldo base, su comisión se calcula como `(Total Ventas Servicios * Tasa de Comisión)`. De lo contrario, su ingreso es solo su sueldo base.
+- **Ventas Directas y Comisiones:** Las ventas creadas directamente (`reservation_id` es NULL en la tabla `sales`) **no se asocian a ningún barbero** y, por lo tanto, no contribuyen al cálculo de comisiones.
 - **Pago Final**: `(Ingreso Calculado) - (Total de Adelantos del Mes)`.
+
+### **Casos de Uso Avanzados de Inventario (Mejores Prácticas)**
+
+1.  **Ítem de Doble Uso (Venta y Consumo):**
+    *   **Escenario:** Un producto (ej. Gel) se vende como unidad y se consume en ml durante los servicios.
+    *   **Solución Recomendada:** Registrar el ítem en su unidad más pequeña de consumo (ej. "Mililitro").
+        *   Se crea un único `Ítem de Inventario` (ej. "Gel Marca X", unidad: "ml").
+        *   La `Adquisición` se registra en la unidad base (ej. una botella de 500ml se ingresa como una cantidad de 500).
+        *   Un `Servicio` se configura en `T_BAR_SERVICE_SUPPLIES` para consumir una pequeña cantidad (ej. `quantity_used: 10`).
+        *   Un `Producto del Menú` para la venta se configura como "Directo", y la lógica de la aplicación debe asegurar que al venderlo, se descuente la cantidad correcta en la unidad base (ej. la venta de una botella descuenta 500 del stock de "ml").
+
+2.  **Manejo de Unidades de Medida Múltiples:**
+    *   **Escenario:** Se compra en cajas, se almacena en botellas, se usa en ml.
+    *   **Solución Recomendada:** El sistema no soporta conversión de unidades. Toda la trazabilidad de un ítem debe realizarse en una **única unidad base** consistente. La mejor práctica es elegir la **unidad de consumo más pequeña**.
+        *   **Ejemplo:** Se compra una caja de 10 potes de cera (100ml c/u) y se usan 5ml por servicio.
+        *   **Implementación:**
+            *   `Ítem de Inventario`: "Cera Profesional", `unit_id` apunta a "Mililitro".
+            *   `Adquisición`: Se registra una entrada de `quantity: 1000` (10 potes * 100 ml).
+            *   `Servicio`: El insumo se configura con `quantity_used: 5`.
+        *   **Resultado:** Este enfoque garantiza la máxima precisión en el seguimiento del stock.
 
 ### **Módulo de Autenticación y Usuarios**
 
@@ -367,24 +406,38 @@ src/
 
 ## 🔄 FLUJO DE DATOS
 
-### 📝 **Flujo Principal: Desde Reservación hasta Venta y Descuento de Stock**
+### 📝 **Flujo Principal: Desde Reservación hasta Venta y Comisión**
 
 ```mermaid
 graph LR
     A[Cliente solicita cita] --> B{Crear Reservación}
-    B --> C[API: POST /api/reservations (con client_id)]
+    B -- barber_id, client_id --> C[API: POST /api/reservations]
     C --> D[Frontend: Calendario muestra la reserva]
     D --> E{Completar Reservación}
-    E -- Items de venta (servicios y productos de menú, con posible cortesía) --> F[API: POST /api/reservations/:id/complete]
-    F -- Inicia Transacción --> G{1. Crea la Venta (con client_id, calcula totales sin cortesías)}
-    G --> H{2. Crea los Ítems de Venta (con precio 0 si es cortesía)}
-    H --> I{3. Actualiza Stock}
-    I -- Por cada Producto de Menú vendido... --> J{Verifica si es Compuesto o Directo}
-    J -- Compuesto --> K{Descuenta Ítems de Inventario según la Receta}
-    J -- Directo --> L{Descuenta el Ítem de Inventario asociado}
-    L --> M{4. Actualiza estado de la Reserva a 'pagado'}
-    K --> M
-    M -- COMMIT Transacción --> N[Venta y Stock Actualizados]
+    E -- Items de venta (servicios, productos, combos) --> F[API: POST /api/reservations/:id/complete]
+    F -- Inicia Transacción --> G{1. Crea Venta (vinculada a reservation_id)}
+    G --> H{2. Crea los Ítems de Venta}
+    H --> I{3. Llama a updateStockFromSale}
+    I -- Para cada ítem... --> J{Evalúa item_type}
+    J -- Si es Combo --> K[Desempaca el combo y llama recursivamente a updateStockFromSale]
+    J -- Si es Servicio --> L[Busca insumos y crea movimientos 'OUT']
+    J -- Si es Producto --> M[Busca receta/link directo y crea movimientos 'OUT']
+    K & L & M --> N{4. Actualiza estado de la Reserva a 'pagado'}
+    N -- COMMIT Transacción --> O[Venta y Stock Actualizados]
+    O --> P((Comisión generada para el barbero de la reserva))
+```
+
+### 🚶 **Flujo de Venta Directa (sin Comisión)**
+
+```mermaid
+graph LR
+    A[Usuario hace clic en 'Nueva Venta' en Calendario] --> B{Abre DirectSaleModal}
+    B -- client_id, items -- > C[API: POST /api/sales]
+    C -- Inicia Transacción --> D{1. Crea Venta (reservation_id es NULL)}
+    D --> E{2. Crea los Ítems de Venta}
+    E --> F{3. Actualiza Stock (descuenta productos)}
+    F -- COMMIT Transacción --> G[Venta y Stock Actualizados]
+    G --> H((No se genera comisión, no hay barbero asociado))
 ```
 
 ### 🛒 **Flujo de Compras y Abastecimiento de Inventario (Mejorado)**
