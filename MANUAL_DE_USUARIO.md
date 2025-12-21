@@ -33,7 +33,7 @@ Para una fácil comprensión, utilizamos las siguientes convenciones:
 2.  Ingrese la URL de la aplicación proporcionada por su administrador.
 3.  Será redirigido a la página de **Inicio de Sesión**.
 
-`[IMAGEN: Pantalla de inicio de sesión con campos para email y contraseña]`
+![Pantalla de Inicio de Sesión](C:/Users/angel/.gemini/antigravity/brain/a82418e8-31db-410b-93c6-1ec2d0323797/login_page_mockup_1764223925188.png)
 
 ### 2.2. Inicio de Sesión
 
@@ -49,7 +49,7 @@ La interfaz se compone de tres áreas principales:
 *   **Barra Superior:** Muestra el nombre del usuario actual y un menú desplegable para acceder a su **Perfil** y **Cerrar Sesión**.
 *   **Área de Contenido Principal:** La sección central donde se muestran los datos, formularios y gráficos del módulo que haya seleccionado.
 
-`[IMAGEN: Vista general del Dashboard, resaltando la barra lateral, la barra superior y el área de contenido]`
+![Vista General del Dashboard](C:/Users/angel/.gemini/antigravity/brain/a82418e8-31db-410b-93c6-1ec2d0323797/dashboard_mockup_1764223963685.png)
 
 ### 2.4. Cerrar Sesión
 
@@ -64,19 +64,16 @@ Para cerrar su sesión de forma segura:
 El **Dashboard** es su pantalla de inicio y ofrece una visión general del estado del negocio en tiempo real. Es la primera pantalla que verá después de iniciar sesión.
 
 *   **Tarjetas de Métricas Clave:** Resúmenes rápidos de:
-    *   **Ventas del Día:** Total monetario vendido en la jornada actual.
-    *   **Reservas para Hoy:** Número de citas agendadas para el día.
-    *   **Clientes Atendidos Hoy:** Conteo de clientes que completaron sus servicios.
-    *   **Productos Vendidos Hoy:** Cantidad de productos de reventa vendidos.
-*   **Ventas Generales (Últimos 30 Días):** Un gráfico de área que muestra la tendencia de ventas. Incluye tarjetas de resumen para:
-    *   **Total General:** Suma de ventas de productos y servicios.
-    *   **Productos:** Total de ventas solo de productos.
-    *   **Servicios:** Total de ventas solo de servicios.
-*   **Ventas por Barbero (Últimos 30 Días):** Un gráfico de barras que compara el rendimiento de ventas por servicios entre los barberos, ideal para ver el desempeño del equipo.
-*   **Servicios Más Populares (Últimos 30 Días):** Un gráfico de dona que muestra los servicios más demandados por los clientes.
-*   **Productos Más Vendidos (Últimos 30 Días):** Un gráfico de dona que destaca los productos de reventa con mayor éxito.
+    *   **Ventas de Productos (Hoy):** Total vendido en productos.
+    *   **Ventas de Servicios (Hoy):** Total vendido en servicios.
+    *   **Reservas para Hoy:** Número de citas agendadas.
+    *   **Clientes Atendidos (Hoy):** Conteo de servicios completados.
+*   **Resumen Financiero:** Muestra el total de ingresos y un desglose por método de pago (Efectivo, Tarjeta, Transferencia, Yape, Plin).
+*   **Pagos a Barberos (Mes Actual):** Una tabla que muestra el total generado por cada barbero y su comisión calculada.
+*   **Servicios Populares (Semana):** Un gráfico de dona que muestra los servicios más demandados.
+*   **Ventas Generales (Últimos 30 Días):** Un gráfico de área que muestra la tendencia de ventas, con desglose entre productos y servicios.
 
-`[IMAGEN: Captura completa del Dashboard mostrando todas las tarjetas y gráficos]`
+![Dashboard Completo](C:/Users/angel/.gemini/antigravity/brain/a82418e8-31db-410b-93c6-1ec2d0323797/dashboard_mockup_1764223963685.png)
 
 ---
 
@@ -93,7 +90,7 @@ Ofrece una vista visual de todas las citas, organizadas por barbero y hora.
 *   **Navegar Fechas:** Use los controles de flecha o el selector de fecha para ir al día o semana que desee consultar.
 *   **Visualización:** Las citas se muestran como bloques de color en la columna del barbero y la franja horaria correspondiente. Los colores indican el estado de la reserva (ej. `Pendiente`, `Confirmada`, `Completada`, `Cancelada`).
 
-`[IMAGEN: Vista del calendario semanal con varias citas de diferentes colores para distintos barberos]`
+![Calendario Semanal](C:/Users/angel/.gemini/antigravity/brain/a82418e8-31db-410b-93c6-1ec2d0323797/calendar_mockup_1764224006492.png)
 
 ### 4.2. Crear una Nueva Reserva
 
@@ -140,12 +137,14 @@ Este módulo gestiona todas las transacciones. El flujo de venta puede iniciar d
 
 1.  **Iniciar el Cobro:** Ana, en recepción, busca la cita de Juan en el calendario y hace clic en **`Registrar Venta`**.
 2.  **Pantalla de Venta (POS):** Se abre la interfaz de Punto de Venta.
+
+    ![Punto de Venta](C:/Users/angel/.gemini/antigravity/brain/a82418e8-31db-410b-93c6-1ec2d0323797/pos_mockup_1764224041964.png)
     *   La información de la reserva ya está cargada: Cliente (Juan Pérez), Barbero (Carlos) y el servicio "Corte Fade" con su precio (ej. S/ 25).
 3.  **Añadir Productos:**
     *   Ana hace clic en el botón **`Añadir Producto`**.
     *   Busca "Cera Moldeadora" y la agrega al carrito de la venta (ej. S/ 35).
 4.  **Verificar el Total y Aplicar Descuentos:** El sistema muestra el total (ej. S/ 25 + S/ 35 = S/ 60).
-5.  **Seleccionar Método de Pago:** Juan paga con tarjeta. Ana selecciona **`Tarjeta`**.
+5.  **Seleccionar Método de Pago:** Juan paga con tarjeta. Ana selecciona **`Tarjeta`**. El sistema también soporta **Efectivo**, **Transferencia**, **Yape** y **Plin**.
 6.  **Confirmar Venta:** Ana hace clic en **`Registrar Venta`**.
     *   **¿Qué pasa en el sistema?**
         *   La transacción financiera queda registrada.
@@ -251,7 +250,7 @@ Antes de añadir productos, debes establecer las bases para organizarlos. Ve a `
 
 Esta es la lista maestra de **todo lo que posees físicamente**. Cada producto, insumo o herramienta debe ser registrado aquí primero.
 
-`[IMAGEN: Formulario de 'Añadir Nuevo Ítem de Inventario' con el campo 'Tipo de Ítem' resaltado]`
+![Lista de Ítems de Inventario](C:/Users/angel/.gemini/antigravity/brain/a82418e8-31db-410b-93c6-1ec2d0323797/inventory_items_mockup_1764224063636.png)
 
 #### **Tipos de Ítem Explicados:**
 
@@ -390,10 +389,18 @@ El sistema calcula el pago a los barberos basado en una regla de negocio especí
 
 ### 7.3. Gestión de Clientes (`Clientes`)
 
-Este módulo te permite ver tu base de datos de clientes.
-1.  Navega a **`Clientes`**.
-2.  Puedes buscar, editar la información de un cliente o ver su historial.
-3.  La creación de nuevos clientes se hace de forma más natural desde el **Calendario** o el **POS**.
+Este módulo permite administrar la base de datos de clientes y ver información detallada de cada uno.
+
+1.  **Lista de Clientes:** Navega a **`Clientes`** para ver la lista completa. Puedes buscar por nombre, teléfono o email.
+2.  **Perfil del Cliente (Detalle):** Al hacer clic en un cliente, accederás a su perfil completo, que incluye:
+    *   **Información Personal:** Datos de contacto y fecha de nacimiento.
+    *   **Puntos de Fidelización:** Una barra de progreso visualizando sus puntos acumulados.
+    *   **Pestañas de Actividad:**
+        *   **Reservas:** Historial de citas pasadas y futuras.
+        *   **Historial de Servicios:** Lista detallada de servicios recibidos.
+        *   **Compras de Productos:** Historial de productos adquiridos.
+        *   **Estadísticas:** Métricas clave como "Total Gastado", "Ticket Promedio", "Servicio Más Solicitado" y "Barbero Más Frecuente".
+3.  **Acciones Rápidas:** Desde el perfil, puedes iniciar rápidamente una **Nueva Reserva** o **Nueva Venta** para ese cliente específico.
 
 ---
 
@@ -430,7 +437,7 @@ No es posible crear opciones donde el cliente elija entre un producto u otro den
 1.  Navegue a **`Configuración > Combos`**.
 2.  Haga clic en el botón **`Añadir Combo`**. Se abrirá el formulario de creación.
 
-`[IMAGEN: Formulario de 'Añadir Combo' vacío]`
+![Formulario de Creación de Combo](C:/Users/angel/.gemini/antigravity/brain/a82418e8-31db-410b-93c6-1ec2d0323797/bundle_form_mockup_1764224100973.png)
 
 3.  **Complete los Detalles Principales:**
     *   **Nombre del Combo:** Escriba "Experiencia de Relajación Total".

@@ -114,6 +114,7 @@ La API RESTful proporciona los siguientes endpoints, protegidos por autenticaci�
 | ---------------------- | -------------------------- | ------------------------------------------------- | ------------------- |
 | GET, POST, PUT, DELETE | `/api/inventory-items`     | CRUD para ítems de inventario (materias primas).  | `authenticateToken` |
 | GET, POST, PUT, DELETE | `/api/menu-products`       | CRUD para productos de menú (productos de venta). | `authenticateToken` |
+| GET, POST, PUT, DELETE | `/api/bundles`             | CRUD para combos (bundles).                       | `authenticateToken` |
 | GET                    | `/api/inventory/summary`   | Resumen del inventario (legado).                  | `authenticateToken` |
 | GET, POST              | `/api/inventory/movements` | Gestión de movimientos de inventario (legado).    | `authenticateToken` |
 
@@ -166,7 +167,7 @@ La API RESTful proporciona los siguientes endpoints, protegidos por autenticaci�
 
 | Método | Endpoint              | Descripción                                                              | Middleware          |
 | ------ | --------------------- | ------------------------------------------------------------------------ | ------------------- |
-| GET    | `/api/pos/master-data` | Obtiene datos maestros (servicios, productos de menú) para el POS. | `authenticateToken` |
+| GET    | `/api/pos/master-data` | Obtiene datos maestros (servicios, productos de menú, bundles, clientes) para el POS. | `authenticateToken` |
 
 ### Modelos de Datos (Interfaces TypeScript)
 
@@ -221,6 +222,11 @@ src/
 | `/reservations` | `ReservationsView`         | `Reservations`                | Gestión de reservaciones (CRUD, paginación).                  |
 | `/schedule`     | `DailyCalendarView`, `WeeklyCalendarView` | `Schedule`                    | Vista de calendario diario y semanal de citas.         |
 | `/payments`     | `BarberPaymentsReportView` | `Payments`                    | Resumen de pagos a barberos.                                  |
+| `/clients`      | `ClientsView`              | `Clients`                     | Gestión de clientes.                                          |
+| `/clients/:id`  | `ClientDetailView`         | `ClientDetail`                | Detalle e historial de un cliente.                            |
+| `/bundles`      | `BundlesView`              | `Bundles`                     | Gestión de combos (bundles).                                  |
+| `/pos`          | `POSView`                  | `POS`                         | Punto de Venta general.                                       |
+| `/pos/reservation/:id` | `ReservationPOSView` | `ReservationPOS`              | Punto de Venta para completar reservas.                       |
 | `/settings`     | `SettingsView`             | `Settings`                    | Configuración del sistema y gestión de usuarios (solo Admin). |
 | `/reports/*`    | Vistas de Reportes         | Diversos reportes de negocio. |
 
@@ -235,6 +241,7 @@ src/
 - **`serviceStore`**: Gestiona la lista de servicios con paginación.
 - **`inventoryItemStore`**: Gestiona el estado y las operaciones CRUD para los ítems de inventario (materias primas).
 - **`menuProductStore`**: Gestiona el estado y las operaciones CRUD para los productos de menú.
+- **`bundleStore`**: Gestiona el estado y las operaciones CRUD para los combos (bundles).
 - **`supplierStore`**: Gestiona el estado de los proveedores.
 - **`purchaseStore`**: Gestiona el estado de las compras.
 - **`reservationStore`**: Gestiona la lista de reservaciones y sus operaciones, incluyendo `calendarReservations` para las vistas de calendario.
@@ -291,7 +298,13 @@ src/
 - **Funcionalidades:** Gestión de servicios con tabla paginada (precio, duración, etc.).
 - **Lógica:** El precio y duración se usan en reservas y ventas.
 
-### 7. 📦 **Inventario** (`/inventory`)
+### 7. 📦 **Inventario y Combos** (`/inventory`, `/bundles`)
+
+- **Funcionalidades:**
+  - **Pestaña "Productos de Menú"**: Gestión de los productos que se venden al cliente.
+  - **Pestaña "Ítems de Inventario"**: Gestión de las materias primas.
+  - **Vista "Combos" (`/bundles`)**: Gestión de paquetes de servicios y productos con precio especial.
+- **Lógica:** Las ventas de combos descuentan el stock de los ítems individuales que los componen.
 
 - **Funcionalidades:** Interfaz con dos pestañas:
   - **Pestaña "Productos de Menú"**: Gestión de los productos que se venden al cliente (ej. "Café Americano", "Cera Moldeadora"). Permite definir si es un producto de venta directa, si es un producto compuesto (con receta), o un servicio.
@@ -313,7 +326,13 @@ src/
 - **Funcionalidades:** La vista de calendario (`/schedule`) muestra las citas por día y semana. El botón "Nuevo" permite iniciar una "Nueva Reserva" (abriendo el `ReservationFormModal`) o una "Nueva Venta" (abriendo el `DirectSaleModal`).
 - **Lógica:** Completar una reserva genera una venta automática. Las horas se manejan en UTC.
 
-### 11. 💰 **Ventas**
+### 11. 💰 **Ventas y Punto de Venta (POS)**
+
+- **Funcionalidades:**
+  - **POS General (`/pos`)**: Interfaz optimizada para ventas rápidas de mostrador. Permite buscar productos/combos, seleccionar cliente y pagar.
+  - **POS de Reserva**: Interfaz similar para completar una reserva, precargada con los servicios de la cita.
+  - **Ventas Directas**: También accesible desde el calendario.
+- **Lógica:** Todas las ventas actualizan el stock y, si están ligadas a una reserva, generan comisiones.
 
 - **Funcionalidades:** La creación de ventas directas (sin reserva) se realiza a través del `DirectSaleModal`, accesible desde la vista de calendario. Estas ventas no se asocian a un barbero y, por lo tanto, no generan comisiones. Los detalles de cualquier venta se pueden ver en el `SaleDetailsModal` o en el reporte de ventas.
 - **Lógica:** Las ventas actualizan el stock de `Ítems de Inventario` según la lógica de productos directos o compuestos.
