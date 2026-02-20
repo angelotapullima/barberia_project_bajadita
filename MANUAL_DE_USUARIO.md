@@ -4,14 +4,14 @@
 
 ### 1.1. Propósito del Sistema
 
-Bienvenido al Manual de Usuario del Sistema de Gestión de Barbería. Esta aplicación ha sido diseñada para optimizar y centralizar todas las operaciones clave de su negocio, desde la gestión de citas y personal hasta el control de inventario y la generación de reportes financieros. Nuestro objetivo es proporcionarle una herramienta intuitiva y eficiente que le permita enfocarse en lo que mejor sabe hacer: ofrecer un excelente servicio a sus clientes.
+Bienvenido al Manual de Usuario del Sistema de Gestión de Barbería. Esta aplicación ha sido diseñada para optimizar y centralizar todas las operaciones clave de su negocio, desde la gestión de citas y personal hasta el control de inventario, flujo de caja y la generación de reportes financieros. Nuestro objetivo es proporcionarle una herramienta intuitiva y eficiente que le permita enfocarse en lo que mejor sabe hacer: ofrecer un excelente servicio a sus clientes.
 
 ### 1.2. Audiencia
 
 Este manual está dirigido a todos los usuarios del sistema, incluyendo:
 
-*   **Administradores:** Encargados de la configuración general, gestión de usuarios, roles, y acceso a todos los módulos.
-*   **Personal de Recepción/Caja:** Responsables de la programación de citas, registro de ventas y gestión de clientes.
+*   **Administradores:** Encargados de la configuración general, gestión de usuarios, roles, finanzas, y acceso a todos los módulos.
+*   **Personal de Recepción/Caja:** Responsables de la apertura y cierre de caja, programación de citas, registro de ventas y gestión de clientes.
 *   **Barberos/Estilistas:** Usuarios que gestionarán sus citas, comisiones y podrán ver sus reportes.
 
 ### 1.3. Convenciones del Manual
@@ -77,22 +77,58 @@ El **Dashboard** es su pantalla de inicio y ofrece una visión general del estad
 
 ---
 
-## 4. Módulo de Agenda y Citas
+## 4. Gestión de Caja y Finanzas (Nuevo Módulo)
+
+**Importante:** Antes de realizar cualquier venta, es indispensable tener una sesión de caja abierta. Este módulo asegura el control del efectivo y la conciliación de cuentas digitales.
+
+### 4.1. Apertura de Caja (Sesión)
+
+1.  Navegue a **`Finanzas > Caja`** (o haga clic en el indicador de estado de caja en la barra superior si está disponible).
+2.  Haga clic en **`Abrir Caja`**.
+3.  **Monto Inicial:** Ingrese la cantidad de dinero físico (sencillo/cambio) con la que inicia el día (ej. S/ 50.00).
+4.  Seleccione la cuenta (generalmente "Caja Principal").
+5.  Confirme. Ahora el sistema está listo para registrar ventas.
+
+### 4.2. Arqueo y Cierre de Caja
+
+Al finalizar el turno o el día, debe cerrar la sesión para conciliar los ingresos.
+
+1.  Vaya a **`Finanzas > Caja`** y seleccione **`Cerrar Caja`**.
+2.  El sistema mostrará el **Monto Esperado** (Monto Inicial + Ventas en Efectivo - Gastos en Efectivo).
+3.  **Monto Real:** Cuente el dinero físico en su cajón e ingrese esa cantidad.
+4.  **Discrepancia:** El sistema calculará automáticamente si sobra o falta dinero.
+    *   Si hay diferencia, ingrese una explicación en el campo **Notas** (ej. "Faltante de S/ 2.00 por error en vuelto").
+5.  Confirme el cierre. Esto genera un reporte de sesión inmutable.
+
+### 4.3. Movimientos Financieros (Gastos e Ingresos Manuales)
+
+El sistema permite registrar movimientos de dinero que no provienen de ventas a clientes (ej. pago de servicios, compra de insumos de limpieza).
+
+1.  Vaya a **`Finanzas > Movimientos`**.
+2.  Haga clic en **`Registrar Movimiento`**.
+3.  **Tipo:** Seleccione **Egreso** (salida de dinero) o **Ingreso** (entrada, ej. aporte de capital).
+4.  **Cuenta:** Elija de dónde sale o entra el dinero (ej. "Caja Principal" o "BCP").
+5.  **Monto y Descripción:** Detalle la operación (ej. S/ 20.00 para "Compra de agua mineral").
+6.  Este movimiento ajustará el saldo de la cuenta seleccionada automáticamente.
+
+---
+
+## 5. Módulo de Agenda y Citas
 
 Este módulo es el centro neurálgico para la gestión diaria de citas.
 
-### 4.1. Calendario de Citas (`Agenda y Citas > Calendario`)
+### 5.1. Calendario de Citas (`Agenda y Citas > Calendario`)
 
 Ofrece una vista visual de todas las citas, organizadas por barbero y hora.
 
 *   **Navegación:** Vaya a **`Agenda y Citas > Calendario`**.
 *   **Vistas:** Puede cambiar entre la vista **Semanal** (por defecto), **Diaria** y **Lista**.
 *   **Navegar Fechas:** Use los controles de flecha o el selector de fecha para ir al día o semana que desee consultar.
-*   **Visualización:** Las citas se muestran como bloques de color en la columna del barbero y la franja horaria correspondiente. Los colores indican el estado de la reserva (ej. `Pendiente`, `Confirmada`, `Completada`, `Cancelada`).
+*   **Visualización:** Las citas se muestran como bloques de color en la columna del barbero y la franja horaria correspondiente. Los colores indican el estado de la reserva (ej. `Pendiente` (Azul), `Pagado` (Verde), `Cancelado` (Rojo)).
 
 ![Calendario Semanal](C:/Users/angel/.gemini/antigravity/brain/a82418e8-31db-410b-93c6-1ec2d0323797/calendar_mockup_1764224006492.png)
 
-### 4.2. Crear una Nueva Reserva
+### 5.2. Crear una Nueva Reserva
 
 **Ejemplo:** *Ana, la recepcionista, necesita agendar un "Corte de Cabello" para un cliente existente, Juan Pérez, con el barbero Carlos para mañana a las 10:00 AM.*
 
@@ -109,7 +145,7 @@ Ofrece una vista visual de todas las citas, organizadas por barbero y hora.
 
 `[IMAGEN: Modal 'Crear Nueva Reserva' con los campos del ejemplo de Juan Pérez]`
 
-### 4.3. Gestionar una Reserva Existente
+### 5.3. Gestionar una Reserva Existente
 
 1.  Haga clic sobre una cita en el **Calendario**.
 2.  Se abrirá un modal con los detalles y las siguientes opciones:
@@ -117,7 +153,7 @@ Ofrece una vista visual de todas las citas, organizadas por barbero y hora.
     *   **`Cancelar`**: Cambia el estado de la reserva a "Cancelada" y libera el espacio. Es importante usar esta opción para mantener el historial limpio.
     *   **`Registrar Venta`**: Es el paso clave para cobrar. Inicia el proceso de cobro en el Punto de Venta y convierte la reserva en una venta (ver Módulo de Ventas).
 
-### 4.4. Lista de Reservas (`Agenda y Citas > Lista`)
+### 5.4. Lista de Reservas (`Agenda y Citas > Lista`)
 
 Ofrece una vista de tabla para buscar y filtrar todas las reservas. Es útil para encontrar rápidamente una cita sin navegar por el calendario.
 
@@ -127,11 +163,11 @@ Ofrece una vista de tabla para buscar y filtrar todas las reservas. Es útil par
 
 ---
 
-## 5. Módulo de Ventas (Punto de Venta - POS)
+## 6. Módulo de Ventas (Punto de Venta - POS)
 
 Este módulo gestiona todas las transacciones. El flujo de venta puede iniciar desde una reserva (lo más común) o como una venta directa.
 
-### 5.1. Completar una Venta desde una Reserva (Flujo Principal)
+### 6.1. Completar una Venta desde una Reserva (Flujo Principal)
 
 **Ejemplo 1 (Servicio + Producto Barbero):** *Juan Pérez ha terminado su "Corte Fade" con Carlos y decide llevarse una "Cera Moldeadora".*
 
@@ -144,11 +180,15 @@ Este módulo gestiona todas las transacciones. El flujo de venta puede iniciar d
     *   Ana hace clic en el botón **`Añadir Producto`**.
     *   Busca "Cera Moldeadora" y la agrega al carrito de la venta (ej. S/ 35).
 4.  **Verificar el Total y Aplicar Descuentos:** El sistema muestra el total (ej. S/ 25 + S/ 35 = S/ 60).
-5.  **Seleccionar Método de Pago:** Juan paga con tarjeta. Ana selecciona **`Tarjeta`**. El sistema también soporta **Efectivo**, **Transferencia**, **Yape** y **Plin**.
+5.  **Seleccionar Método de Pago:**
+    *   Este paso es crucial para el arqueo.
+    *   Si Juan paga con tarjeta, Ana selecciona **`Tarjeta`** (o **POS/Niubiz** si está detallado).
+    *   Si paga con **Yape** o **Plin**, Ana selecciona la cuenta financiera correspondiente.
+    *   Si paga en **Efectivo**, selecciona esa opción.
 6.  **Confirmar Venta:** Ana hace clic en **`Registrar Venta`**.
     *   **¿Qué pasa en el sistema?**
-        *   La transacción financiera queda registrada.
-        *   El estado de la reserva de Juan cambia a **`Completada`**.
+        *   La transacción financiera queda registrada en la cuenta seleccionada.
+        *   El estado de la reserva de Juan cambia a **`Completada` (Pagado)**.
         *   El stock de "Cera Moldeadora (Pote 100g)" se descuenta en 1 unidad.
         *   El stock de los insumos del "Corte Fade" (ej. 1 "Navaja de Afeitar (Unidad)", 10ml de "Champú Profesional (Botella 1L)") se descuenta automáticamente.
         *   La venta se asocia a Carlos para el cálculo de su comisión.
@@ -168,9 +208,9 @@ Este módulo gestiona todas las transacciones. El flujo de venta puede iniciar d
         *   El estado de la reserva de María cambia a **`Completada`**.
         *   **Deducción de inventario del Combo:**
             *   Los insumos del "Corte Fade" (Navaja de Afeitar, Champú Profesional) se descuentan.
-            *   Los ingredientes del "Capuchino" (Grano de Café, Leche, Azúcar, Agua Filtrada) se descuentan según la receta, utilizando las unidades base definidas.
+            *   Los ingredientes del "Capuchino" (Grano de Café, Leche, Azúcar, Agua Filtrada) se descuentan según la **Receta** configurada.
 
-### 5.2. Registrar una Venta Directa (Walk-in)
+### 6.2. Registrar una Venta Directa (Walk-in)
 
 **Ejemplo (Productos de Barbería y Cafetería):** *Un cliente entra sin cita, compra un "Champú Profesional" y un "Capuchino".*
 
@@ -184,12 +224,12 @@ Este módulo gestiona todas las transacciones. El flujo de venta puede iniciar d
     *   El total es S/ 45 + S/ 8 = S/ 53.
 3.  **Completar el Pago:** El cliente paga en efectivo. Ana selecciona **`Efectivo`** y registra el pago.
     *   **¿Qué pasa en el sistema?**
-        *   La transacción se registra.
-        *   El stock de "Champú Profesional (Botella 1L)" se descuenta en 1 unidad.
-        *   El stock de los ingredientes del "Capuchino" (Grano de Café, Leche, Azúcar, Agua Filtrada) se descuentan según la receta y unidades base.
+        *   La transacción se registra sumando S/ 53 a la Caja.
+        *   El stock de "Champú Profesional" se descuenta en 1 unidad.
+        *   El stock de los ingredientes del "Capuchino" se descuenta según su receta (ej. 18g de café, 150ml de leche).
 
 
-### 5.3. Anular una Venta
+### 6.3. Anular una Venta
 
 **Ejemplo:** *Ana se equivocó y cobró un producto incorrecto a Juan. Necesita anular la venta para rehacerla.*
 
@@ -199,10 +239,11 @@ Este módulo gestiona todas las transacciones. El flujo de venta puede iniciar d
 4.  **Motivo:** El sistema le pide un motivo para la anulación (ej. "Error en cobro de ítem"). Esto es obligatorio y queda registrado para auditoría.
 5.  **Confirmar:** Tras confirmar, el sistema realiza una **reversión completa**:
     *   El estado de la venta cambia a **`Anulada`**.
+    *   **El dinero se resta:** El monto de la venta se descuenta de la cuenta financiera donde se ingresó.
     *   **El stock se devuelve:** La "Cera Moldeadora" y los insumos del servicio vuelven a estar disponibles en el inventario.
     *   La reserva de Juan vuelve al estado **`Reservado`**, lista para que Ana inicie el proceso de venta de nuevo, esta vez correctamente.
 
-### 5.4. Cortesías
+### 6.4. Cortesías
 
 Cuando decides regalar un producto o servicio a un cliente:
 
@@ -213,7 +254,7 @@ Cuando decides regalar un producto o servicio a un cliente:
 
 ---
 
-## 6. Módulo de Inventario: Guía Completa
+## 7. Módulo de Inventario: Guía Completa
 
 El módulo de inventario es el corazón del control de existencias. Entender su estructura es clave para una gestión exitosa.
 
@@ -224,55 +265,25 @@ El módulo de inventario es el corazón del control de existencias. Entender su 
 Antes de añadir productos, debes establecer las bases para organizarlos. Ve a `Inventario > Configuración`.
 
 *   **`Tipos de Unidad`**:
-    *   **¿Qué es?** Define las unidades en las que mides tus productos.
-    *   **Ejemplos:** "Unidad(es)", "Litro(s)", "Gramo(s)", "Caja(s)", "Mililitro(s)".
-    *   **Importancia:** Es esencial para la consistencia y el control preciso del stock. La clave es elegir la **unidad base** más pequeña en la que consumes o utilizas el producto.
-
-    *   **Concepto de Unidad Base (Factor de Conversión):**
-        *   El sistema no realiza conversiones automáticas entre unidades (ej. no sabe que 1 litro = 1000 mililitros si no lo indicas).
-        *   Por lo tanto, la **mejor práctica es registrar cada `Ítem de Inventario` en la unidad más pequeña** en la que lo vas a utilizar o consumir.
-        *   **Ejemplo 1 (Leche):** Si compras leche por litros (en cajas de 6 x 1L) pero la usas en cafés en porciones de 100ml, tu unidad base para el ítem "Leche Fresca" debería ser **"Mililitro(s)"**.
-        *   **Ejemplo 2 (Café):** Si compras café en paquetes de 500g o 1kg, pero cada taza de café consume 18g, tu unidad base para el ítem "Café en Grano" debería ser **"Gramo(s)"**.
-
-    *   Al registrar tus adquisiciones o consumos, siempre deberás ingresar las cantidades en esta unidad base. Esto es fundamental para que el stock refleje la realidad.
+    *   **¿Qué es?** Define la unidad en la que mides y cuentas físicamente tu producto.
+    *   **Ejemplos:** "Unidad(es)", "Mililitro(s)", "Gramo(s)".
+    *   **Regla de Oro (Unidad Única):** Para evitar errores, el sistema utiliza una sola unidad por ítem. **Registre siempre el ítem en la unidad más pequeña en la que lo consume**. Si compra un bidón de 5 litros pero gasta de a 10ml, registre el ítem como "Mililitros" e ingrese "5000" al comprarlo.
 
 *   **`Categorías de Ítems`**:
-    *   **¿Qué es?** Permite agrupar tus ítems de inventario.
-    *   **Ejemplos:** "Cuidado del Cabello", "Herramientas", "Bebidas", "Limpieza".
-    *   **Importancia:** Facilita la búsqueda, filtrado y generación de reportes.
+    *   **¿Qué es?** Es la forma principal de clasificar tus productos (ej. "Insumos de Barbería", "Bebidas", "Retail"). Reemplaza a los antiguos tipos de ítem fijos.
 
 *   **`Ubicaciones`**:
     *   **¿Qué es?** Define los lugares físicos donde almacenas tus productos.
-    *   **Ejemplos:** "Almacén Principal", "Estante A-1", "Recepción", "Nevera".
+    *   **Ejemplos:** "Almacén Principal", "Estante A-1", "Nevera".
     *   **Importancia:** Ayuda al personal a encontrar productos y a realizar inventarios físicos.
 
 ### **Paso 2: El Núcleo - Ítems de Inventario (`Inventario > Ítems`)**
 
-Esta es la lista maestra de **todo lo que posees físicamente**. Cada producto, insumo o herramienta debe ser registrado aquí primero.
+Esta es la lista maestra de **todo lo que posees físicamente**.
 
 ![Lista de Ítems de Inventario](C:/Users/angel/.gemini/antigravity/brain/a82418e8-31db-410b-93c6-1ec2d0323797/inventory_items_mockup_1764224063636.png)
 
-#### **Tipos de Ítem Explicados:**
-
-*   **`Insumo Consumible (CONSUMABLE_SUPPLY)`**:
-    *   **¿Qué es?** Un producto que se gasta o consume al realizar un servicio.
-    *   **Ejemplos:** El champú para lavar el cabello, la cera para un peinado, una navaja desechable.
-    *   **Uso en el sistema:** Se vinculan a un `Servicio` en "Insumos Requeridos". Al vender el servicio, el stock de estos insumos se descuenta automáticamente.
-
-*   **`Producto de Venta (RETAIL_PRODUCT)`**:
-    *   **¿Qué es?** Un producto que compras y vendes directamente al cliente.
-    *   **Ejemplos:** Botellas de cera de marca, latas de cerveza, champús en empaque original.
-    *   **Uso en el sistema:** Se vincula a un `Producto del Menú` de tipo "Directo". Al venderse, el stock se descuenta 1 a 1.
-
-*   **`Materia Prima (RAW_MATERIAL)`**:
-    *   **¿Qué es?** Un ingrediente usado para crear otro producto. No se vende tal cual ni se usa directamente en un servicio estándar.
-    *   **Ejemplo:** Compras "pigmento rojo" y "peróxido" por separado. Los mezclas para crear un "tinte rojo personalizado". El pigmento y el peróxido son Materia Prima.
-    *   **Uso en el sistema:** Se usarían en la "receta" de un `Producto del Menú` de tipo "Compuesto".
-
-*   **`Activo Operacional (OPERATIONAL_ASSET)`**:
-    *   **¿Qué es?** Un artículo propiedad del negocio, de uso repetido, pero que no se consume ni se vende.
-    *   **Ejemplos:** Máquinas de cortar, tijeras, toallas, sillas de barbero.
-    *   **Uso en el sistema:** Se registran para control de patrimonio. Su stock no se descuenta automáticamente con las ventas.
+Cada ítem se vincula a una **Categoría** y una **Unidad**. El sistema controla el stock basándose en los movimientos (Entradas y Salidas) de estas unidades.
 
 ### **Paso 3: Las Entradas - Adquisiciones (`Inventario > Adquisiciones`)**
 
@@ -283,39 +294,33 @@ Aquí se registra toda la mercancía que entra al negocio. Es crucial que las ca
 1.  **Crear la Adquisición:**
     *   Ve a `Inventario > Adquisiciones` y haz clic en `Registrar Adquisición`.
     *   **Proveedor:** Selecciona el proveedor correspondiente.
-    *   **Fecha:** La fecha de hoy.
+    *   **Cuenta Financiera:** Puede seleccionar de qué cuenta sale el dinero (Caja, Banco, etc.).
     *   **Referencia:** El número de factura o guía.
     *   Guarda el encabezado.
 2.  **Añadir las Líneas de Detalle:**
     *   En la tabla, busca la adquisición creada y expande sus detalles.
     *   Haz clic en `Añadir Ítem a la Adquisición`.
     *   **Ítem de Inventario:** Selecciona "Leche Fresca".
-    *   **Cantidad:** Debes convertir la cantidad comprada a la unidad base (mililitros): 6 tarros * 1 Litro/tarro * 1000 ml/Litro = **6000 mililitros**. Ingresa `6000`.
-    *   **Precio Unitario:** El costo de cada mililitro de leche (costo total de la compra / 6000).
+    *   **Cantidad:** Ingrese la cantidad en su unidad base: 6 Litros = **6000 mililitros**.
+    *   **Precio Unitario:** El costo de cada mililitro.
     *   Guarda la línea.
-3.  **Resultado:** El stock de "Leche Fresca" ha aumentado en 6000 mililitros.
+3.  **Resultado:** El stock ha aumentado y el saldo de la cuenta financiera se ha ajustado.
 
-**Ejemplo de Negocio (Café):** *Compraste un paquete de 1 Kilogramo de café en grano. El ítem "Café en Grano" está configurado con la unidad base "**Gramo(s)**".*
+### **Paso 4: Las Salidas - Ventas, Bajas y Consumo Interno**
 
-1.  **Añadir la Línea de Detalle:** (Asumiendo que ya creaste la adquisición)
-    *   Haz clic en `Añadir Ítem a la Adquisición`.
-    *   **Ítem de Inventario:** Selecciona "Café en Grano".
-    *   **Cantidad:** Convierte el kilogramo a gramos: 1 Kilogramo * 1000 gramos/Kilogramo = **1000 gramos**. Ingresa `1000`.
-    *   **Precio Unitario:** El costo por gramo de café.
-    *   Guarda la línea.
-2.  **Resultado:** El stock de "Café en Grano" ha aumentado en 1000 gramos.
-
-### **Paso 4: Las Salidas - Ventas y Bajas**
-
-El stock disminuye de tres maneras:
+El stock disminuye de cuatro maneras:
 
 1.  **Por Venta de Servicios:** Al vender un servicio, el sistema descuenta los **Insumos Consumibles** definidos en la configuración de ese servicio.
-2.  **Por Venta de Productos del Menú:** Al vender un producto del POS, el sistema descuenta el **Ítem de Inventario** asociado.
-3.  **Por Bajas Manuales (`Inventario > Bajas`):** Para registrar productos rotos, caducados o robados. Vas a `Inventario > Bajas`, seleccionas el ítem, la cantidad y el motivo. El stock se reduce y queda registrado.
+2.  **Por Venta de Productos del Menú:** Al vender un producto del POS, el sistema descuenta el **Ítem de Inventario** asociado (directo o por receta).
+3.  **Por Bajas Manuales (`Inventario > Bajas`):** Para registrar productos rotos, caducados o perdidos. Vas a `Inventario > Bajas`, seleccionas el ítem, la cantidad y el motivo. El stock se reduce y queda registrado como pérdida.
+4.  **Por Consumo Interno (`Inventario > Consumo Interno`):**
+    *   Use esta opción cuando un empleado usa un producto para el funcionamiento del negocio, pero no es una venta al cliente.
+    *   **Ejemplo:** Usar un poco de detergente para limpiar el piso, o un barbero usando gel para su propio cabello.
+    *   Seleccione el Barbero/Usuario, el Ítem y la Cantidad. El stock baja, pero no afecta la caja.
 
 ### **Paso 5: El Historial - Movimientos de Inventario (`Inventario > Movimientos`)**
 
-Esta sección es tu libro contable de stock. Es una vista de **solo lectura** que unifica todos los pasos anteriores. Aquí puedes auditar cada entrada (por Adquisición), salida (por Venta o Baja) y ajuste, dándote una trazabilidad completa.
+Esta sección es tu libro contable de stock. Es una vista de **solo lectura** que unifica todos los pasos anteriores. Aquí puedes auditar cada entrada (por Adquisición), salida (por Venta, Baja o Consumo Interno) y ajuste.
 
 #### **Ajuste de Inventario**
 
@@ -333,16 +338,23 @@ Si tu stock físico no coincide con el del sistema, debes hacer un ajuste:
 Esta es la lista de artículos que ofreces en tu Punto de Venta (POS).
 
 *   **`Ítems de Inventario` vs. `Productos del Menú`**:
-    *   **Ítem de Inventario:** Es lo físico, lo que está en tu almacén (ej. "Gramos de café en grano").
-    *   **Producto del Menú:** Es lo que vendes al cliente (ej. "Taza de Café Americano"). Al venderlo, se descuentan X gramos de café del inventario.
+    *   **Ítem de Inventario:** Es lo físico, lo que está en tu almacén (ej. "Gramos de café en grano", "Botella de Cera").
+    *   **Producto del Menú:** Es lo que vendes al cliente (ej. "Taza de Café Americano", "Cera Moldeadora").
 
-Al crear un `Producto del Menú`, lo vinculas a uno o más `Ítems de Inventario`.
+#### **Configuración de Recetas (Productos Compuestos)**
+Para productos como bebidas de cafetería:
+1.  Cree el Producto del Menú (ej. "Capuchino").
+2.  En la sección de **Receta**, añada los componentes:
+    *   Café en Grano (18g)
+    *   Leche Fresca (150ml)
+    *   Vaso Descartable (1 unidad)
+3.  Al vender 1 Capuchino, el sistema descontará automáticamente esos tres ítems del inventario.
 
 ---
 
-## 7. Módulo de Personal y Clientes
+## 8. Módulo de Personal y Clientes
 
-### 7.1. Gestión de Personas (`Configuración > Personas`)
+### 8.1. Gestión de Personas (`Configuración > Personas`)
 
 Este es el directorio central de **todos los individuos** relacionados con tu negocio.
 
@@ -351,7 +363,7 @@ Este es el directorio central de **todos los individuos** relacionados con tu ne
 *   **Usuario:** Es una `Persona` con acceso al sistema (puede iniciar sesión). Se le asigna un `Rol` que define sus permisos.
 *   **Barbero:** Es un `Usuario` con el rol específico de barbero, habilitado para ser asignado a citas y generar comisiones.
 
-### 7.2. Gestión de Barberos (`Personal > Barberos`)
+### 8.2. Gestión de Barberos (`Personal > Barberos`)
 
 Aquí administras a tu personal de barbería.
 1.  Navega a **`Personal > Barberos`**.
@@ -360,34 +372,25 @@ Aquí administras a tu personal de barbería.
 
 #### **Cálculo de Pagos a Barberos (`Personal > Pagos`)**
 
-El sistema calcula el pago a los barberos basado en una regla de negocio específica, ya explicada anteriormente. Aquí se detalla el proceso en el sistema.
+El sistema calcula el pago a los barberos basándose en el principio de **Sueldo Asegurado vs. Comisión**. El barbero siempre recibirá, como mínimo, su sueldo base, pero si su producción genera una comisión mayor, recibirá esta última.
 
-**Ejemplo Práctico:** *Carlos debe recibir su pago de comisiones y ya solicitó dos adelantos durante el mes.*
+**Ejemplo Práctico:** *Carlos tiene un sueldo base de S/ 1200 y una comisión del 40%. En el mes ha solicitado S/ 250 en adelantos.*
 
 1.  **Navegar al Módulo:** Vaya a **`Personal > Pagos`**.
-2.  **Seleccionar Barbero y Periodo:**
-    *   En el campo **`Barbero`**, seleccione "Carlos García".
-    *   En **`Rango de Fechas`**, seleccione el mes correspondiente (ej. "Noviembre 2025").
-3.  **Visualizar Resultados:** El sistema cargará automáticamente:
-    *   Todas las ventas de servicios asociadas a Carlos en ese periodo.
-    *   Los adelantos que Carlos ha solicitado y que aún no han sido pagados (ej. S/ 100 y S/ 150).
-    *   El **`Total Ventas Servicios`** de Carlos (ej. S/ 3100).
-    *   El **`Sueldo Base`** configurado para Carlos (ej. S/ 1200).
-    *   La **`Tasa de Comisión`** (ej. 40%).
-    *   El sistema aplicará la regla de negocio:
-        *   Doble de Sueldo Base = `1200 * 2 = S/ 2400`.
-        *   Como `3100 >= 2400`, Carlos comisiona.
-        *   Comisión = `3100 * 0.40 = S/ 1240`.
-        *   Ingreso Calculado = `S/ 1240`.
-    *   El sistema mostrará el **`Total Adelantos`** (S/ 250).
-    *   El **`Monto Final a Pagar`** = `1240 - 250 = S/ 990`.
-4.  **Registrar Pago:**
-    *   Revise todos los detalles. Si es correcto, haga clic en **`Finalizar y Registrar Pago`**.
-    *   El sistema le pedirá confirmar y registrará la transacción de pago, marcando los adelantos como "pagados" y generando un registro histórico.
+2.  **Seleccionar Barbero y Periodo:** Seleccione a Carlos y el mes actual.
+3.  **Visualizar Resultados:** El sistema cargará:
+    *   **Total Ventas Servicios:** El monto generado por Carlos (ej. S/ 4000).
+    *   **Comisión Calculada:** 40% de S/ 4000 = **S/ 1600**.
+    *   **Sueldo Base:** S/ 1200.
+    *   **Regla de Pago:** El sistema compara S/ 1600 (Comisión) vs S/ 1200 (Sueldo Base). Al ser la comisión mayor, el monto ganado es **S/ 1600**.
+        *   *Nota:* Si Carlos hubiera vendido solo S/ 2000, su comisión sería S/ 800. En ese caso, el sistema le aseguraría su **Sueldo Base de S/ 1200**.
+    *   **Adelantos y Descuentos:** El sistema resta los adelantos registrados (S/ 250).
+    *   **Monto Final a Pagar:** S/ 1600 - S/ 250 = **S/ 1350**.
+4.  **Registrar Pago:** Al confirmar, el sistema marca los servicios como "pagados al barbero" y genera el registro contable.
 
-**Importante:** Las comisiones se calculan **únicamente sobre los servicios**. La venta de productos no contribuye a la comisión del barbero.
+**Importante:** Solo los **Servicios** (cortes, barbas, etc.) contribuyen a la comisión. Los productos vendidos no suman para este cálculo.
 
-### 7.3. Gestión de Clientes (`Clientes`)
+### 8.3. Gestión de Clientes (`Clientes`)
 
 Este módulo permite administrar la base de datos de clientes y ver información detallada de cada uno.
 
@@ -404,19 +407,20 @@ Este módulo permite administrar la base de datos de clientes y ver información
 
 ---
 
-## 8. Módulo de Configuración
+## 9. Módulo de Configuración
 
 Aquí se gestionan los parámetros fundamentales del sistema.
 
-### 8.1. Servicios (`Configuración > Servicios`)
+### 9.1. Servicios (`Configuración > Servicios`)
 
 Define los servicios que ofreces. Al crear o editar un servicio:
 *   **Nombre, Descripción, Precio, Duración:** Información básica.
+*   **Centro de Costo:** Asigne si pertenece a "Barbería", "Cafetería", etc., para los reportes financieros.
 *   **Insumos del Servicio:** ¡Sección clave! Aquí especificas qué **`Ítems de Inventario`** y en qué **`cantidad`** se consumen al realizar este servicio (ej. "Corte Premium" consume 10ml de champú y 1 navaja). Estos se descontarán automáticamente del stock cuando el servicio se venda.
 
 `[IMAGEN: Formulario de creación de servicio, resaltando la sección 'Insumos del Servicio']`
 
-### 8.2. Guía Detallada de Combos (`Configuración > Combos`)
+### 9.2. Guía Detallada de Combos (`Configuración > Combos`)
 
 El módulo de **Combos** (o Bundles) es una herramienta de marketing que te permite agrupar varios servicios y/o productos en un solo paquete, facilitando su venta.
 
@@ -464,7 +468,7 @@ No es posible crear opciones donde el cliente elija entre un producto u otro den
 **Resultado Final:**
 Su combo "Experiencia de Relajación Total" está ahora disponible como un único artículo para ser añadido a cualquier venta desde el **`POS`**. Al venderlo, el sistema descontará automáticamente del inventario todos los insumos de los servicios y/o los productos incluidos en el paquete.
 
-### 8.3. Otros Ajustes
+### 9.3. Otros Ajustes
 
 *   **`Estaciones`**: Define las sillas o estaciones de trabajo físicas.
 *   **`Proveedores`**: Administra la información de tus proveedores de productos.
@@ -472,7 +476,7 @@ Su combo "Experiencia de Relajación Total" está ahora disponible como un únic
 
 ---
 
-## 9. Módulo de Reportes
+## 10. Módulo de Reportes
 
 Ofrece análisis detallados sobre el rendimiento del negocio.
 
@@ -488,7 +492,7 @@ Ofrece análisis detallados sobre el rendimiento del negocio.
 
 ---
 
-## 10. Preguntas Frecuentes (FAQ) y Casos de Uso
+## 11. Preguntas Frecuentes (FAQ) y Casos de Uso
 
 **P1: ¿Cómo manejo un producto que se vende y también se usa en servicios? (Ej: Un gel)**
 *R:* Registra un único `Ítem de Inventario` (ej. "Gel Fijador Marca X" en mililitros) y conéctalo a dos sitios:
@@ -513,7 +517,7 @@ Ofrece análisis detallados sobre el rendimiento del negocio.
 *R:* Es una característica planificada para un futuro programa de fidelización. Actualmente, el campo existe pero la lógica para acumular o canjear puntos **no está implementada**.
 
 **P6: ¿Puedo registrar gastos como el alquiler o los sueldos en el sistema?**
-*R:* No. El sistema está especializado en la gestión operativa y de inventario (Costo de Bienes Vendidos). Para gastos administrativos y operativos (alquiler, servicios, etc.), deberás usar un software de contabilidad externo.
+*R:* **Sí**. El sistema ahora permite registrar movimientos manuales. Vaya a **`Finanzas > Movimientos`**, seleccione **Egreso**, la cuenta de la que sale el dinero (ej. Caja o Banco) y registre el monto y concepto. Esto afectará el saldo de su arqueo o cuenta bancaria.
 
 **P7: ¿Cómo funcionan los combos y cómo afectan mi inventario?**
 *R:* Los combos son paquetes fijos de servicios y/o productos que se venden como una sola unidad.
@@ -528,7 +532,7 @@ Ofrece análisis detallados sobre el rendimiento del negocio.
     1.  Cuando vendes el servicio "Café con Leche", el sistema automáticamente descontará **100 mililitros** del stock total de "Leche Fresca".
 
 *   **Ejemplo (Café en un producto del menú):** Si tu ítem "Café en Grano" tiene como unidad base "Gramo(s)", y creaste un "Producto del Menú" llamado "Taza de Café Americano" que vinculaste al ítem "Café en Grano" con una cantidad de **18** (gramos) por taza:
-    1.  Cuando vendes una "Taza de Café Americano", el sistema descontará **18 gramos** del stock total de "Café en Grano".
+    1.  Cuando vendes una "Taza de Café Americano", el sistema descontará **18 gramos** del stock total de "Café en Grano" (usando la función de **Receta**).
 
 *   **Clave:** La consistencia en el uso de la unidad base a lo largo de la configuración (tipo de unidad del ítem, cantidad en adquisiciones, cantidad en consumos de servicios o productos del menú) es lo que garantiza un control de inventario preciso.
 

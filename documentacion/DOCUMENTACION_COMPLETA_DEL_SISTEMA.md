@@ -1,204 +1,104 @@
-# Informe Detallado del Sistema de Gestión de Barbería
+# Informe Detallado del Sistema de Gestión de Barbería Pro (v3.11)
 
 ## 📋 Índice
 1.  Introducción y Visión General del Sistema
 2.  Estado Actual de la Documentación
-3.  Análisis del Backend
+3.  Análisis del Backend (v3.11)
     3.1. Tecnologías y Arquitectura
-    3.2. Esquema de la Base de Datos (`barberia_project_backend/src/database/db.sql`)
+    3.2. Esquema de la Base de Datos (Estructura Actualizada)
     3.3. Funcionalidades de la API (Endpoints)
-    3.4. Ausencias / Posibles Mejoras (Backend)
 4.  Análisis del Frontend
     4.1. Tecnologías y Arquitectura
     4.2. Estructura y Flujo
-    4.3. Funcionalidades Principales (Interfaz de Usuario)
-    4.4. Ausencias / Posibles Mejoras (Frontend)
-5.  Resumen de Funcionalidades Existentes
-6.  Resumen de Funcionalidades Ausentes (o no implementadas según documentación)
+    4.3. Funcionalidades de Interfaz (Nuevos Módulos)
+5.  Resumen de Funcionalidades Existentes (Operativas y Financieras)
+6.  Resumen de Funcionalidades Ausentes
 
 ---
 
 ### **1. Introducción y Visión General del Sistema**
 
-El sistema de gestión de barbería es una aplicación completa diseñada para digitalizar y optimizar las operaciones diarias de una barbería. Está compuesto por un backend robusto basado en Node.js/Express.js con TypeScript y una base de datos PostgreSQL, y un frontend interactivo desarrollado con Vue.js 3, Pinia y Tailwind CSS.
-
-La arquitectura sigue un patrón MVC, donde el frontend actúa como la Vista, el backend como el Controlador y la base de datos PostgreSQL como el Modelo. La comunicación entre frontend y backend se realiza a través de una API RESTful.
+El sistema ha evolucionado de una herramienta de gestión de citas a una plataforma integral de **ERP (Enterprise Resource Planning)** para barberías. Combina la gestión operativa (citas, barberos) con un control financiero estricto (arqueos de caja, flujos multicuenta) y un inventario de unidad única optimizado para evitar errores de conversión.
 
 ### **2. Estado Actual de la Documentación**
 
-La documentación del proyecto es extensa y abarca diferentes niveles de detalle, desde guías de usuario hasta documentos de diseño técnico. Se ha realizado una limpieza, eliminando documentos obsoletos, redundantes o incompletos.
+La documentación técnica se mantiene sincronizada con la **v3.11** del esquema de base de datos. Se han purgado los flujos desfasados relacionados con factores de conversión complejos y tipos de inventario estáticos.
 
-**Documentación Clave y su Propósito:**
+**Documentos de Referencia:**
+*   `design-doc-backend.md` / `design-doc-frontend.md`: Arquitectura técnica.
+*   `MANUAL_DE_USUARIO.md`: Manual operativo actualizado con flujos de caja y finanzas.
+*   `barberia_project_backend/src/database/db.sql`: Definición maestra de la estructura de datos.
 
-*   **Documentación de Diseño (Backend y Frontend):**
-    *   `barberia_project_backend/design-doc-backend.md`: Arquitectura, modelos de datos, flujos del backend.
-    *   `barberia_project_frontend/design-doc-frontend.md`: Arquitectura, flujo de datos, componentes, stores y mapeo de vistas a endpoints del frontend.
-*   **Manuales y Guías Operacionales:**
-    *   `MANUAL_DE_INICIO_RAPIDO.md`: Guía concisa para la configuración inicial y operaciones diarias.
-    *   `MANUAL_DE_USUARIO.md`: Manual extenso y detallado para todos los usuarios.
-    *   `GUIA_DE_INVENTARIO_DETALLADA.md`: Guía práctica para la configuración avanzada del inventario con conversión de unidades.
-*   **Diseño Técnico y Proposiciones (Útiles para Contexto/Futuro):**
-    *   `inventario.md`: Propuesta de diseño técnico de inventario (SQL, vistas, flujos, sugerencias).
-*   **Requisitos Funcionales/Diseño UI:**
-    *   `MODULO_CLIENTES.md`: Requisitos funcionales y diseño de UI para el módulo de clientes (listado, detalle, CRUD).
-    *   `barberia_project_frontend/DISEÑO_Y_LOGICA_DE_NEGOCIO.md`: Documento funcional de alto nivel para stakeholders.
-*   **Guías de Desarrollo/Mantenimiento:**
-    *   `barberia_project_backend/README.md`: Guía rápida de setup y ejecución del backend.
-    *   `barberia_project_frontend/README.md`: Guía rápida de setup y ejecución del frontend.
-    *   `backup_supabase_restore.md`: Guía técnica para backup y restauración de bases de datos (específico de Supabase).
-    *   `barberia_project_frontend/DOCUMENTACION_FRONTEND.md`: Manual técnico exhaustivo del frontend (referencia para desarrolladores).
+---
 
-
-### **3. Análisis del Backend**
+### **3. Análisis del Backend (v3.11)**
 
 **3.1. Tecnologías y Arquitectura:**
-*   **Stack:** Node.js (Express.js), TypeScript.
-*   **Base de Datos:** PostgreSQL.
-*   **Estructura:** Claramente definida en `src/controllers`, `src/services`, `src/models`, `src/routes`, `src/middleware`.
-*   **Conexión a DB:** Uso de `pg` (Node-Postgres) con pool de conexiones para eficiencia.
-*   **Seguridad:** Autenticación JWT, control de acceso basado en roles mediante middlewares (`authenticateToken`, `authorizeRoles`).
-*   **Registro (Logging):** Utiliza un logger (`logger.ts`) para trazar eventos y errores.
+*   **Core:** Node.js, TypeScript, Express.js.
+*   **Persistencia:** PostgreSQL con zona horaria configurada en `America/Lima`.
+*   **Arquitectura:** Basada en capas (Routes -> Controllers -> Services). La lógica de negocio pesada (como el completado de reservas y cálculo de comisiones) reside en los servicios.
 
-**3.2. Esquema de la Base de Datos (`barberia_project_backend/src/database/db.sql`):**
-El esquema es relacional, bien normalizado y robusto, con énfasis en la integridad y trazabilidad de los datos.
+**3.2. Esquema de la Base de Datos (Evolución v3.11):**
+Se ha simplificado el modelo de inventario y se ha robustecido el módulo financiero.
 
-*   **Entidades Centrales:** `persons` (base para `users`, `clients`, `barbers`, `suppliers`).
-*   **Inventario Avanzado:**
-    *   `inventory_items`: Gestión granular de ítems físicos (`RAW_MATERIAL`, `CONSUMABLE_SUPPLY`, `OPERATIONAL_ASSET`, `RETAIL_PRODUCT`).
-    *   `unit_types`, `item_categories`, `locations` para clasificación y organización.
-    *   `consumption_unit_id` y `conversion_factor` en `inventory_items` permiten una gestión precisa de insumos y recetas.
-    *   `acquisitions`, `acquisition_lines`, `disposals` para entradas y salidas de stock.
-    *   `inventory_movements`: Registro auditable de todos los cambios de stock.
-*   **Productos y Combos:**
-    *   `menu_products`: Productos que se venden al cliente, pueden ser directos o compuestos.
-    *   `product_recipes`: Define ingredientes para `menu_products` compuestos.
-    *   `T_BAR_SERVICE_SUPPLIES`: Define insumos consumidos por servicios.
-    *   `T_BAR_BUNDLES`, `T_BAR_BUNDLE_ITEMS`: Para la gestión de paquetes/combos.
-*   **Reservas y Ventas Desacopladas:**
-    *   `reservations`: Vinculadas a `clients`, `barbers`, `services`.
-    *   `sales`: Vinculadas a `clients` y opcionalmente a `reservations`. El detalle de la venta (`sale_items`) es la fuente de verdad de montos.
-    *   `sale_items`: Contiene servicios y productos vendidos, incluyendo manejo de cortesías.
-*   **Finanzas y Personal:** `barbers`, `barber_advances`, `barber_commissions` para el cálculo y registro de pagos a barberos.
-*   **Vistas:** `barber_sales_summary` y `v_inventory_stock` para cálculos agregados y stock en tiempo real.
-*   **ENUM Types:** Para asegurar la validez de ciertos campos (ej. `movement_kind_enum`).
+*   **Módulo Financiero (Nuevo):**
+    *   `financial_accounts`: Gestiona múltiples fuentes de dinero (Caja Principal, Yape, Bancos).
+    *   `cash_box_sessions`: Controla los arqueos de caja (monto inicial, esperado, real y discrepancia).
+    *   `financial_movements`: Registra cada entrada/salida de dinero, vinculándola a una sesión de caja y cuenta específica.
+    *   `cost_centers`: Segmenta financieramente el negocio (Barbería, Cafetería, Retail).
+*   **Inventario Simplificado (Modelo de Unidad Única):**
+    *   Se eliminaron los factores de conversión complejos. Cada ítem de `inventory_items` se maneja en una única unidad base.
+    *   Categorización dinámica mediante `item_categories`.
+    *   `internal_consumptions`: Registro de uso de insumos por el personal (no ventas).
+*   **Ventas y POS:**
+    *   `sale_payments`: Permite pagos divididos (ej. parte efectivo, parte Yape).
+    *   `sale_items`: Trazabilidad total, incluyendo asociación a `reservations` y `cost_centers`.
 
-**3.3. Funcionalidades de la API (Endpoints):**
-La API RESTful es completa y cubre todas las áreas de gestión de la barbería:
+**3.3. Funcionalidades de la API (Endpoints Principales):**
+*   **Caja y Finanzas:** `CRUD /financial-accounts`, `POST /cash-box/open`, `POST /cash-box/close`, `GET /cash-box/current-session`.
+*   **Inventario:** `CRUD /products` (items), `CRUD /acquisitions`, `CRUD /internal-consumption`, `CRUD /menu-products` (con recetas).
+*   **Comisiones:** `GET /barber-commissions/monthly-summary` (Calcula el mayor entre Sueldo Base y Comisión).
+*   **POS:** `POST /sales` con soporte para múltiples métodos de pago y cuentas financieras.
 
-*   **Autenticación y Autorización:** `POST /auth/login`, `GET /auth/me`, `PUT /auth/change-password`, `CRUD /users`.
-*   **Gestión de Entidades Base:** `CRUD /persons`, `CRUD /clients`, `CRUD /barbers`, `CRUD /stations`, `CRUD /services`, `CRUD /suppliers`.
-*   **Gestión de Inventario:** `CRUD /unit-types`, `CRUD /item-categories`, `CRUD /locations`, `CRUD /inventory-items`, `CRUD /menu-products`, `CRUD /bundles`, `CRUD /acquisitions`, `CRUD /acquisition-lines`, `CRUD /disposals`, `GET/POST /inventory-movements`.
-*   **Operaciones de Negocio:**
-    *   **Reservas:** `CRUD /reservations`, `POST /reservations/:id/complete` (crea venta), `POST /reservations/:id/cancel`, `GET /reservations/view/calendar`.
-    *   **Ventas:** `POST /sales` (directa), `GET /sales`, `GET /sales/:id`, `GET /sales/by-reservation/:reservationId`, `POST /sales/:id/anular`.
-    *   **Comisiones:** `GET /barber-commissions/monthly-summary`, `POST /barber-commissions/finalize-payment`.
-*   **Dashboard y Reportes:** `GET /dashboard/summary`, `GET /reports/*` (ventas, uso de estaciones, clientes, horas pico, etc.).
-*   **Configuración:** `CRUD /settings`.
-*   **Punto de Venta (POS):** `GET /pos/master-data` (datos maestros para el POS).
-
-**3.4. Ausencias / Posibles Mejoras (Backend):**
-
-*   **Tablas `purchases` y `purchase_details` (LEGACY):** El análisis del código (`acquisition.controller.ts`) sugiere que estas tablas no se utilizan. Se recomienda **eliminarlas del esquema de `db.sql`** para evitar confusiones y mantener la base de datos limpia. Esto requerirá una migración de base de datos si estas tablas existen en entornos de producción.
-*   **Optimización `stock_quantity`:** La tabla `inventory_items` aún contiene `stock_quantity`. Si `v_inventory_stock` es la fuente de verdad del stock, este campo podría eliminarse y el stock siempre se calcularía a través de la vista, o se podría implementar un trigger para mantenerlo sincronizado, si es un requisito de rendimiento.
-*   **Validación de Entrada (Backend):** Aunque hay validaciones básicas, la implementación de una librería de validación más robusta (ej. Joi, class-validator) en la capa de controladores o middlewares podría mejorar la fiabilidad y el mantenimiento del código.
+---
 
 ### **4. Análisis del Frontend**
 
-**4.1. Tecnologías y Arquitectura:**
-*   **Stack:** Vue.js 3 (Composition API, `<script setup>`), Pinia, Vue Router 4, Tailwind CSS.
-*   **Build Tool:** Vite.
-*   **Cliente HTTP:** Axios (con interceptores para JWT y manejo de errores 401/403).
-*   **Componentes UI:** Reutilizables y agnósticos al estado de Pinia cuando es posible.
-*   **Gestión de Estado:** Pinia stores (`authStore`, `clientStore`, `barberStore`, etc.) centralizan el estado y la lógica de negocio del frontend.
-*   **Navegación:** Vue Router con guardias para proteger rutas.
+**4.1. Tecnologías:** Vue 3, Pinia (Estado), Tailwind CSS (Diseño "Clean & Bright" de alto contraste).
 
-**4.2. Estructura y Flujo:**
-El frontend sigue una estructura modular (`assets`, `components`, `router`, `services`, `stores`, `views`). El flujo de datos es unidireccional:
-`Vista (interacción) -> Store (acción) -> Servicio API (Axios) -> Backend -> (respuesta) -> Store (mutación estado) -> Vista (actualización reactiva)`.
+**4.2. Flujo de Datos:** El frontend consume el endpoint `/api/pos/master-data` para cargar de forma atómica servicios, productos y combos, minimizando la latencia en el Punto de Venta.
 
-**4.3. Funcionalidades Principales (Interfaz de Usuario):**
-
-*   **Autenticación y Perfiles:** `LoginView`, `ProfileView`, `SettingsView` (gestión de usuarios y reglas de pago).
-*   **Dashboard:** `DashboardView` con métricas en tiempo real, gráficos (ventas, pagos a barberos).
-*   **Gestión de Entidades:**
-    *   **Barberos:** `BarbersView`, formularios para CRUD.
-    *   **Estaciones:** `StationsView`, formularios para CRUD.
-    *   **Servicios:** `ServicesView`, formularios para CRUD (con sección para insumos requeridos).
-    *   **Personas:** `PeopleView`, formularios para CRUD.
-    *   **Clientes:** `ClientsView`, `ClientDetailView` (historial, estadísticas).
-    *   **Proveedores:** `SuppliersView`, formularios para CRUD.
-*   **Inventario Avanzado:**
-    *   `InventoryItemsView`, `MenuProductsView`, `AcquisitionsView`, `DisposalsView`, `InventoryMovementsView`, `UnitTypesView`, `ItemCategoriesView`, `LocationsView`.
-    *   Formularios complejos para `MenuProduct` (tipo de producto, recetas).
-*   **Combos:** `BundlesView`, `BundleForm` (para definir combos con ítems fijos y grupos de elección).
-*   **Compras:** `PurchasesView`, formularios para registro de compras (con selección de proveedor e ítems).
-*   **Reservas y Calendario:**
-    *   `ReservationsView` (lista), `DailyCalendarView`, `WeeklyCalendarView`.
-    *   `ReservationFormModal` (crear/editar reservas).
-*   **Ventas (POS):**
-    *   `POSView` (ventas rápidas), `ReservationPOSView` (completar reservas).
-    *   `SaleRegistrationModal` (añadir servicios/productos, cortesías).
-    *   `DirectSaleModal` (ventas directas).
-*   **Reportes:** Múltiples vistas de reportes (ventas, comisiones, inventario, uso de estaciones, horas pico, frecuencia de clientes).
-*   **Pagos a Barberos:** `BarberPaymentsReportView`, `PaymentConfirmationView` (con cálculo de adelantos, servicios y pago final).
-
-**4.4. Ausencias / Posibles Mejoras (Frontend):**
-
-*   **Pruebas Unitarias y de Integración (Frontend):** La documentación menciona Vitest o Jest para Pinia stores y componentes, pero no se ha verificado su implementación o cobertura.
-*   **Lazy Loading de Rutas:** Mejorar el rendimiento inicial del frontend implementando la carga perezosa para las rutas no críticas.
-*   **Validación de Formularios (Frontend):** Implementar una validación más robusta y unificada en el frontend para evitar envíos de datos inválidos al backend.
-*   **Manejo de Errores Global:** Mejorar la visualización de errores de la API en la UI (ej. con notificaciones toast).
-*   **Internacionalización (i18n):** Si la aplicación se va a usar en diferentes regiones.
-*   **Accesibilidad (A11y):** Revisión de componentes para cumplir con estándares de accesibilidad.
+**4.3. Nuevas Funcionalidades de Interfaz:**
+*   **Interfaz de Arqueo:** Pantalla dedicada para apertura y cierre de caja con calculadora de discrepancia.
+*   **Selector Multicuenta:** En el POS, el usuario elige a qué cuenta entra el dinero.
+*   **Gestión de Recetas:** UI para configurar qué ingredientes descuenta cada producto compuesto (ej. un café).
 
 ---
 
 ### **5. Resumen de Funcionalidades Existentes**
 
-El sistema cuenta con las siguientes funcionalidades clave:
+1.  **Gestión de Caja Pro:** Apertura, registro de ventas, egresos manuales y cierre con arqueo físico.
+2.  **Finanzas Multicuenta:** Conciliación de saldos en efectivo y billeteras digitales (Yape/Plin).
+3.  **Inventario de Unidad Única:** Control de stock sin errores de conversión. Gestión de Insumos y Materia Prima.
+4.  **Productos Compuestos:** Descuento automático de inventario basado en recetas (cafetería).
+5.  **Agenda Inteligente:** Calendario por barbero y estación con estados de pago sincronizados.
+6.  **Comisiones Avanzadas:** Regla de protección al barbero (`MAX(Sueldo Base, Comisión)`).
+7.  **Consumo Interno:** Auditoría de productos usados por el equipo.
+8.  **Punto de Venta Versátil:** Soporte para cortesías, ventas directas y ventas desde reserva.
+9.  **Centros de Costo:** Reportes de rentabilidad separados por área de negocio.
 
-1.  **Gestión de Usuarios y Roles:** Autenticación segura, autorización basada en roles (administrador, cajero), CRUD de usuarios y gestión de perfiles.
-2.  **Gestión de Personal:** CRUD completo de personas, clientes, barberos y estaciones de trabajo.
-3.  **Gestión de Servicios y Productos:**
-    *   CRUD de servicios, productos del menú (con soporte para productos compuestos y recetas), y combos/paquetes.
-    *   Definición de insumos consumibles por servicio.
-4.  **Gestión de Inventario Integral:**
-    *   Clasificación detallada de ítems (materias primas, insumos, productos de venta, activos).
-    *   Gestión de unidades, categorías y ubicaciones.
-    *   Control de stock con movimientos de entrada (adquisiciones), salida (ventas, bajas) y ajustes.
-    *   Factor de conversión para unidades de compra/almacenamiento y consumo.
-    *   Alertas de stock mínimo.
-5.  **Gestión de Compras:** Registro detallado de adquisiciones a proveedores, con impacto directo en el inventario.
-6.  **Gestión de Reservas y Agenda:**
-    *   Calendario interactivo (diario, semanal).
-    *   Creación, modificación, cancelación y completado de reservas (vinculadas a clientes, barberos y servicios).
-7.  **Gestión de Ventas (POS):**
-    *   Flujo de venta desde reserva y venta directa.
-    *   Manejo de múltiples ítems (servicios, productos, combos).
-    *   Soporte para cortesías (con motivo y descuento de stock).
-    *   Anulación de ventas con reversión de stock y estado de reserva.
-    *   Múltiples métodos de pago.
-8.  **Gestión Financiera de Personal:**
-    *   Cálculo de comisiones de barberos basado en un modelo mixto (salario base vs. porcentaje de ventas).
-    *   Registro y gestión de adelantos a barberos.
-    *   Finalización de pagos con historial y boleta.
-9.  **Reportes y Análisis:** Amplia gama de reportes para la toma de decisiones (ventas por tipo, uso de estaciones, clientes, horas pico, resumen de inventario, etc.) y un dashboard con métricas clave.
-10. **Configuración del Sistema:** Gestión de parámetros globales del negocio.
+---
 
-### **6. Resumen de Funcionalidades Ausentes (o no implementadas según documentación):**
+### **6. Resumen de Funcionalidades Ausentes**
 
-1.  **Programa de Lealtad/Puntos:** Aunque la tabla `clients` tiene `loyalty_points`, la lógica de acumulación, canje o gestión de recompensas no parece estar implementada ni documentada en los manuales de usuario.
-2.  **Notificaciones Automatizadas:** (SMS/Email) para recordatorios de citas o cambios.
-3.  **Reservas Online para Clientes:** El sistema actual se centra en la gestión interna de reservas por el personal.
-4.  **Integración con Pasarelas de Pago:** Aunque se registran métodos de pago, no se especifica una integración directa con terminales o pasarelas online.
-5.  **Módulo de Activos Fijos:** `OPERATIONAL_ASSET` en `inventory_items` permite el registro de activos, pero no hay un módulo de gestión específico para su depreciación, mantenimiento o seguimiento individualizado (serial, garantías), más allá del control básico de stock.
-6.  **Control por Lotes/Fechas de Vencimiento:** Para ítems de inventario perecederos, el sistema actual no ofrece esta funcionalidad.
-7.  **Movimientos de Inventario entre Ubicaciones:** Aunque existe la tabla `locations`, la funcionalidad para transferir ítems entre ellas no está explícitamente detallada en los controladores ni manuales.
+1.  **Facturación Electrónica:** No hay integración directa con SUNAT (Perú) u otros entes tributarios; genera boletas internas.
+2.  **Reservas Online Clientes:** El sistema es de uso interno exclusivo del personal.
+3.  **Programa de Puntos (Lógica):** La tabla existe, pero la lógica de canje no está implementada.
+4.  **Alertas Push:** No hay notificaciones automáticas por WhatsApp o SMS (solo visuales en el dashboard).
 
 ---
 
 **Conclusión:**
-
-El sistema de gestión de barbería es un producto maduro y funcional, con una arquitectura sólida y una cobertura exhaustiva de las necesidades operativas de una barbería moderna. La reciente refactorización de la base de datos y la implementación del módulo de inventario avanzado, junto con el sistema de combos, lo posicionan como una herramienta potente. Las áreas identificadas para la mejora continua se centran en la limpieza del esquema de base de datos (eliminación de tablas LEGACY), optimizaciones de rendimiento y la posible incorporación de funcionalidades adicionales que podrían enriquecer aún más la experiencia del usuario y la capacidad de negocio.
+El sistema ha alcanzado un nivel de madurez técnica elevado con la **v3.11**. La eliminación de flujos desfasados y la centralización en el control de caja lo convierten en una herramienta robusta para la gestión empresarial real, no solo operativa.
 
 ---
